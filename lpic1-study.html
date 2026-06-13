@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LPIC-1 Study Hub</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0F172A',
+            surface: '#1E293B',
+            border: '#334155',
+            accent: '#22C55E',
+            accentHover: '#16A34A',
+            textPrimary: '#F8FAFC',
+            textMuted: '#94A3B8',
+            textDim: '#64748B',
+            danger: '#EF4444',
+            warning: '#F59E0B',
+            info: '#3B82F6',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0F172A; color: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1E293B; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .progress-ring { transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-green { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.3); } 50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } }
+    .fade-in { animation: fadeIn 0.25s ease forwards; }
+    .option-btn { transition: all 0.15s ease; }
+    .option-btn:hover:not(:disabled) { background: #1E3A5F; border-color: #3B82F6; transform: translateX(2px); }
+    .sidebar-item { transition: all 0.15s ease; }
+    .sidebar-item:hover { background: #1E293B; }
+    .correct { background: rgba(34,197,94,0.15) !important; border-color: #22C55E !important; color: #86EFAC !important; }
+    .incorrect { background: rgba(239,68,68,0.15) !important; border-color: #EF4444 !important; color: #FCA5A5 !important; }
+    .was-correct { background: rgba(34,197,94,0.08) !important; border-color: rgba(34,197,94,0.4) !important; }
+    .terminal-text { font-family: 'JetBrains Mono', monospace; }
+    .glow-accent { text-shadow: 0 0 20px rgba(34,197,94,0.4); }
+    .card-hover { transition: all 0.2s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body class="dark">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const EXAM_TOPICS = [
+  {
+    exam: '101',
+    id: 'T101', label: '101: System Architecture',
+    weight: '6%',
+    subtopics: ['101.1 Hardware', '101.2 Boot Process', '101.3 Runlevels/Systemd'],
+    questions: [
+      {
+        id: 'q101_1',
+        topic: 'T101',
+        text: 'Which command is used to list all PCI devices in a Linux system?',
+        type: 'single',
+        options: ['lsusb', 'lspci', 'lshw', 'dmidecode'],
+        correct: [1],
+        explanation: '`lspci` lists all PCI devices. `lsusb` lists USB devices, `lshw` lists hardware details, and `dmidecode` reads DMI/SMBIOS table data.',
+      },
+      {
+        id: 'q101_2',
+        topic: 'T101',
+        text: 'Which file contains information about mounted hardware detected by the kernel?',
+        type: 'single',
+        options: ['/proc/meminfo', '/proc/devices', '/sys/bus', '/proc/bus'],
+        correct: [3],
+        explanation: '`/proc/bus` contains information about hardware buses and connected devices. `/proc/devices` lists char/block devices but not bus hardware.',
+      },
+      {
+        id: 'q101_3',
+        topic: 'T101',
+        text: 'Which of the following is the FIRST stage in the Linux boot process?',
+        type: 'single',
+        options: ['initrd loading', 'BIOS/UEFI POST', 'Kernel decompression', 'systemd init'],
+        correct: [1],
+        explanation: 'BIOS/UEFI POST (Power-On Self-Test) is the very first stage. It initializes hardware and then hands off to the bootloader (GRUB).',
+      },
+      {
+        id: 'q101_4',
+        topic: 'T101',
+        text: 'Which kernel parameter passes the root filesystem to the Linux kernel at boot?',
+        type: 'single',
+        options: ['init=', 'root=', 'fs=', 'rootdev='],
+        correct: [1],
+        explanation: 'The `root=` kernel parameter specifies the device containing the root filesystem (e.g., root=/dev/sda1). `init=` overrides the init binary.',
+      },
+      {
+        id: 'q101_5',
+        topic: 'T101',
+        text: 'What is the default target in systemd equivalent to the old SysV runlevel 5?',
+        type: 'single',
+        options: ['graphical.target', 'multi-user.target', 'default.target', 'rescue.target'],
+        correct: [0],
+        explanation: '`graphical.target` is equivalent to runlevel 5 (full graphical multi-user). `multi-user.target` = runlevel 3 (multi-user CLI). `rescue.target` = runlevel 1.',
+      },
+      {
+        id: 'q101_6',
+        topic: 'T101',
+        text: 'Which command shows the current systemd default target?',
+        type: 'single',
+        options: ['systemctl list-units', 'systemctl get-default', 'systemctl status', 'systemctl show-default'],
+        correct: [1],
+        explanation: '`systemctl get-default` returns the default target unit (e.g., graphical.target). Use `systemctl set-default` to change it.',
+      },
+      {
+        id: 'q101_7',
+        topic: 'T101',
+        text: 'Which command displays kernel messages (dmesg equivalent) using systemd?',
+        type: 'single',
+        options: ['journalctl -k', 'systemctl log', 'syslogd -k', 'journalctl --boot'],
+        correct: [0],
+        explanation: '`journalctl -k` (or `--dmesg`) shows only kernel messages, equivalent to `dmesg`. `journalctl --boot` shows all messages from current boot.',
+      },
+      {
+        id: 'q101_8',
+        topic: 'T101',
+        text: 'Which SysV runlevel represents "single-user mode"?',
+        type: 'single',
+        options: ['0', '1', '2', '6'],
+        correct: [1],
+        explanation: 'Runlevel 1 is single-user mode (maintenance). Runlevel 0 = halt, Runlevel 6 = reboot, Runlevel 2-5 = various multi-user modes.',
+      },
+    ],
+  },
+  {
+    exam: '101',
+    id: 'T102', label: '102: Installation & Packages',
+    weight: '9%',
+    subtopics: ['102.1 Hard Disk Layout', '102.2 Boot Manager', '102.3 Libraries', '102.4 Debian Packages', '102.5 RPM/YUM'],
+    questions: [
+      {
+        id: 'q102_1',
+        topic: 'T102',
+        text: 'Which command installs a .deb package file directly?',
+        type: 'single',
+        options: ['apt install', 'dpkg -i', 'rpm -i', 'yum install'],
+        correct: [1],
+        explanation: '`dpkg -i package.deb` installs a local .deb file. `apt install` downloads and installs from repositories. `rpm` and `yum` are for RPM-based systems.',
+      },
+      {
+        id: 'q102_2',
+        topic: 'T102',
+        text: 'Which file contains the list of APT repositories?',
+        type: 'single',
+        options: ['/etc/apt/sources', '/etc/apt/sources.list', '/etc/apt.conf', '/var/apt/sources'],
+        correct: [1],
+        explanation: '`/etc/apt/sources.list` (and files in `/etc/apt/sources.list.d/`) define APT package repositories. Additional repo files use the `.list` extension.',
+      },
+      {
+        id: 'q102_3',
+        topic: 'T102',
+        text: 'What is the minimum recommended swap partition size for a system with 2GB RAM?',
+        type: 'single',
+        options: ['512 MB', '1 GB', '2 GB', '4 GB'],
+        correct: [2],
+        explanation: 'The traditional recommendation is swap = RAM size (2GB). For systems that need hibernation, swap should be at least RAM size. Modern guidelines vary.',
+      },
+      {
+        id: 'q102_4',
+        topic: 'T102',
+        text: 'Which command lists all installed RPM packages?',
+        type: 'single',
+        options: ['rpm -qa', 'rpm -l', 'rpm --list', 'yum list'],
+        correct: [0],
+        explanation: '`rpm -qa` (query all) lists all installed packages. `-q` is query flag, `-a` means all. `yum list installed` also works but is higher-level.',
+      },
+      {
+        id: 'q102_5',
+        topic: 'T102',
+        text: 'Which GRUB 2 configuration file should you edit to change boot parameters?',
+        type: 'single',
+        options: ['/boot/grub/grub.cfg', '/etc/grub.conf', '/etc/default/grub', '/boot/grub2/menu.lst'],
+        correct: [2],
+        explanation: '`/etc/default/grub` is the user-editable config file. After editing, run `update-grub` to regenerate the actual `/boot/grub/grub.cfg` (which is auto-generated).',
+      },
+      {
+        id: 'q102_6',
+        topic: 'T102',
+        text: 'Which command shows which shared libraries a binary depends on?',
+        type: 'single',
+        options: ['ldconfig', 'ldd', 'libcheck', 'readelf -d'],
+        correct: [1],
+        explanation: '`ldd /path/to/binary` lists shared library dependencies. `ldconfig` updates the dynamic linker cache. Both are essential library management tools.',
+      },
+      {
+        id: 'q102_7',
+        topic: 'T102',
+        text: 'The /boot partition should contain which of the following? (Select all that apply)',
+        type: 'multi',
+        options: ['The kernel image (vmlinuz)', 'initrd/initramfs', '/etc/fstab', 'GRUB configuration'],
+        correct: [0, 1, 3],
+        explanation: '/boot contains the kernel (vmlinuz), initramfs (initial RAM filesystem), and bootloader config. /etc/fstab lives on the root filesystem, not /boot.',
+      },
+      {
+        id: 'q102_8',
+        topic: 'T102',
+        text: 'Which command removes a package AND its configuration files on Debian?',
+        type: 'single',
+        options: ['apt remove', 'dpkg -r', 'apt purge', 'dpkg --remove'],
+        correct: [2],
+        explanation: '`apt purge` (or `dpkg --purge`) removes the package AND configuration files. `apt remove` / `dpkg -r` removes binaries but keeps config files.',
+      },
+    ],
+  },
+  {
+    exam: '101',
+    id: 'T103', label: '103: GNU & Unix Commands',
+    weight: '26%',
+    subtopics: ['103.1 Shell Basics', '103.2 Streams/Pipes', '103.3 Text Processing', '103.4 Streams', '103.5 File Operations', '103.6 Processes', '103.7 Regular Expressions', '103.8 vi Editor'],
+    questions: [
+      {
+        id: 'q103_1',
+        topic: 'T103',
+        text: 'Which command finds files modified in the last 24 hours?',
+        type: 'single',
+        options: ['find . -mtime -1', 'find . -mtime +1', 'find . -newer 1', 'find . -age -24h'],
+        correct: [0],
+        explanation: '`find . -mtime -1` finds files modified less than 1 day (24h) ago. `-mtime +1` means MORE than 1 day ago. The `-` prefix means "less than".',
+      },
+      {
+        id: 'q103_2',
+        topic: 'T103',
+        text: 'Which command sorts lines of a file in reverse order?',
+        type: 'single',
+        options: ['sort -r', 'sort -d', 'rev', 'sort -b'],
+        correct: [0],
+        explanation: '`sort -r` reverses the sort order. `rev` reverses individual characters on each line. `-d` sorts in dictionary order, `-b` ignores leading blanks.',
+      },
+      {
+        id: 'q103_3',
+        topic: 'T103',
+        text: 'What does the `2>&1` redirection do?',
+        type: 'single',
+        options: [
+          'Redirects stdout to a file named 1',
+          'Redirects stderr (fd 2) to wherever stdout (fd 1) is going',
+          'Duplicates stdin to stderr',
+          'Redirects both streams to /dev/null',
+        ],
+        correct: [1],
+        explanation: '`2>&1` redirects file descriptor 2 (stderr) to the same destination as fd 1 (stdout). Example: `cmd > file.log 2>&1` sends both stdout and stderr to file.log.',
+      },
+      {
+        id: 'q103_4',
+        topic: 'T103',
+        text: 'Which command displays the last 20 lines of a file in real-time?',
+        type: 'single',
+        options: ['tail -20 -f file', 'tail -n 20 -f file', 'head -20 -f file', 'cat -20 file'],
+        correct: [1],
+        explanation: '`tail -n 20 -f file` shows last 20 lines and follows new lines as they are written. `-f` (follow) is essential for log monitoring.',
+      },
+      {
+        id: 'q103_5',
+        topic: 'T103',
+        text: 'Which `grep` option enables case-insensitive matching?',
+        type: 'single',
+        options: ['-c', '-i', '-v', '-n'],
+        correct: [1],
+        explanation: '`grep -i pattern` performs case-insensitive matching. `-c` counts matches, `-v` inverts (shows non-matching lines), `-n` shows line numbers.',
+      },
+      {
+        id: 'q103_6',
+        topic: 'T103',
+        text: 'In vi, which key sequence saves the file and quits?',
+        type: 'single',
+        options: [':wq', ':q!', 'ZZ', 'Both :wq and ZZ'],
+        correct: [3],
+        explanation: 'Both `:wq` (write+quit) and `ZZ` (save if modified + quit) save and exit vi. `:q!` quits WITHOUT saving (force quit). `:w` saves without quitting.',
+      },
+      {
+        id: 'q103_7',
+        topic: 'T103',
+        text: 'Which command replaces all occurrences of "foo" with "bar" in a file using sed?',
+        type: 'single',
+        options: ['sed "s/foo/bar/" file', 'sed "s/foo/bar/g" file', 'sed "/foo/bar/g" file', 'sed "r/foo/bar/" file'],
+        correct: [1],
+        explanation: '`sed "s/foo/bar/g"` substitutes ALL occurrences (global flag `g`). Without `/g`, only the first occurrence per line is replaced.',
+      },
+      {
+        id: 'q103_8',
+        topic: 'T103',
+        text: 'Which signal number does `kill -9` send?',
+        type: 'single',
+        options: ['SIGTERM (15)', 'SIGKILL (9)', 'SIGHUP (1)', 'SIGINT (2)'],
+        correct: [1],
+        explanation: 'Signal 9 is SIGKILL — cannot be caught, blocked, or ignored. SIGTERM (15) is the graceful terminate. SIGHUP (1) reloads config. SIGINT (2) is Ctrl+C.',
+      },
+      {
+        id: 'q103_9',
+        topic: 'T103',
+        text: 'What does `chmod 755 file` set the permissions to?',
+        type: 'single',
+        options: [
+          'rwxr-xr-x (owner: rwx, group: r-x, others: r-x)',
+          'rwxrwxr-x (owner: rwx, group: rwx, others: r-x)',
+          'rw-r--r-- (owner: rw-, group: r--, others: r--)',
+          'rwx--x--x (owner: rwx, group: --x, others: --x)',
+        ],
+        correct: [0],
+        explanation: '755 in octal: 7=rwx (owner), 5=r-x (group), 5=r-x (others). This is standard for executables/directories that should be readable by all but only writable by owner.',
+      },
+      {
+        id: 'q103_10',
+        topic: 'T103',
+        text: 'Which command shows running processes with real-time CPU/memory usage?',
+        type: 'single',
+        options: ['ps aux', 'top', 'pstree', 'jobs'],
+        correct: [1],
+        explanation: '`top` shows a real-time, interactive view of processes sorted by CPU usage. `ps aux` is a snapshot. `pstree` shows the process tree. `jobs` shows shell background jobs.',
+      },
+      {
+        id: 'q103_11',
+        topic: 'T103',
+        text: 'What is the output of: `echo "Hello World" | cut -d" " -f2`',
+        type: 'single',
+        options: ['Hello', 'World', 'Hello World', 'H'],
+        correct: [1],
+        explanation: '`cut -d" " -f2` splits on space delimiter and takes field 2. "Hello World" split on space gives field 1="Hello", field 2="World".',
+      },
+      {
+        id: 'q103_12',
+        topic: 'T103',
+        text: 'Which command shows the disk usage of the current directory in human-readable format?',
+        type: 'single',
+        options: ['df -h .', 'du -sh .', 'ls -lh', 'stat -h .'],
+        correct: [1],
+        explanation: '`du -sh .` shows disk USAGE of the current directory (-s: summary, -h: human-readable). `df -h` shows filesystem disk SPACE (free/used on mount points).',
+      },
+    ],
+  },
+  {
+    exam: '101',
+    id: 'T104', label: '104: Filesystems',
+    weight: '13%',
+    subtopics: ['104.1 Partitions', '104.2 Filesystem Types', '104.3 Mount/Unmount', '104.5 File Permissions', '104.6 Hard/Soft Links', '104.7 Find Files'],
+    questions: [
+      {
+        id: 'q104_1',
+        topic: 'T104',
+        text: 'What is the difference between a hard link and a symbolic (soft) link?',
+        type: 'single',
+        options: [
+          'Hard links can span filesystems; symbolic links cannot',
+          'Hard links point to the inode; symbolic links point to the filename/path',
+          'Hard links are faster but symbolic links use less space',
+          'Hard links work only for directories; symbolic links work for files',
+        ],
+        correct: [1],
+        explanation: 'Hard links point directly to the inode (same inode number as original). Symbolic links store the target path. Hard links cannot span filesystems or link directories. Deleting the original does not break a hard link.',
+      },
+      {
+        id: 'q104_2',
+        topic: 'T104',
+        text: 'Which command checks and repairs an ext4 filesystem?',
+        type: 'single',
+        options: ['fsck /dev/sda1', 'e2fsck /dev/sda1', 'mount --repair', 'tune2fs --fix'],
+        correct: [1],
+        explanation: '`e2fsck` is the ext2/3/4 filesystem checker. `fsck` is the generic wrapper that calls the appropriate tool. The filesystem must be UNMOUNTED before checking.',
+      },
+      {
+        id: 'q104_3',
+        topic: 'T104',
+        text: 'Which file defines filesystems mounted at boot?',
+        type: 'single',
+        options: ['/etc/mounts', '/etc/fstab', '/proc/mounts', '/boot/fstab'],
+        correct: [1],
+        explanation: '`/etc/fstab` (filesystem table) defines filesystems mounted at boot. `/proc/mounts` shows CURRENTLY mounted filesystems (runtime, read-only kernel view).',
+      },
+      {
+        id: 'q104_4',
+        topic: 'T104',
+        text: 'What does the sticky bit do on a directory (e.g., /tmp)?',
+        type: 'single',
+        options: [
+          'Makes the directory immutable',
+          'Prevents users from deleting files they don\'t own',
+          'Forces all files to inherit the directory\'s group',
+          'Makes the directory world-writable',
+        ],
+        correct: [1],
+        explanation: 'The sticky bit (t) on a directory means users can only delete/rename files they own, even if they have write permission on the directory. This is set on /tmp (permissions: 1777).',
+      },
+      {
+        id: 'q104_5',
+        topic: 'T104',
+        text: 'Which command mounts all filesystems listed in /etc/fstab?',
+        type: 'single',
+        options: ['mount -a', 'mount --all', 'fstab mount', 'mount /etc/fstab'],
+        correct: [0],
+        explanation: '`mount -a` mounts all filesystems in /etc/fstab (except those marked with `noauto`). This is run during boot by init scripts.',
+      },
+      {
+        id: 'q104_6',
+        topic: 'T104',
+        text: 'What is the inode?',
+        type: 'single',
+        options: [
+          'The filename stored in the directory entry',
+          'A data structure storing file metadata (permissions, size, timestamps, disk location)',
+          'The first block of a file',
+          'The filesystem\'s boot block',
+        ],
+        correct: [1],
+        explanation: 'An inode stores file metadata: permissions, owner, size, timestamps, and pointers to data blocks — but NOT the filename. Filenames are stored in directory entries pointing to inodes.',
+      },
+      {
+        id: 'q104_7',
+        topic: 'T104',
+        text: 'Which command finds all files owned by user "alice"?',
+        type: 'single',
+        options: ['find / -user alice', 'find / -owner alice', 'ls -u alice /', 'locate --user alice'],
+        correct: [0],
+        explanation: '`find / -user alice` searches from root for files owned by alice. `-user` accepts username or UID. `-group groupname` finds by group ownership.',
+      },
+    ],
+  },
+  {
+    exam: '102',
+    id: 'T105', label: '105: Shells & Scripting',
+    weight: '8%',
+    subtopics: ['105.1 Shell Environment', '105.2 Shell Scripting', '105.3 SQL Basics'],
+    questions: [
+      {
+        id: 'q105_1',
+        topic: 'T105',
+        text: 'Which file is sourced for an interactive non-login bash shell?',
+        type: 'single',
+        options: ['/etc/profile', '~/.bash_profile', '~/.bashrc', '~/.profile'],
+        correct: [2],
+        explanation: '`~/.bashrc` is sourced for interactive non-login shells. `~/.bash_profile` (or `~/.profile`) is for login shells. `/etc/profile` is system-wide for login shells.',
+      },
+      {
+        id: 'q105_2',
+        topic: 'T105',
+        text: 'In bash, what does `$?` contain?',
+        type: 'single',
+        options: ['The current process ID', 'The exit status of the last command', 'The number of arguments', 'The script filename'],
+        correct: [1],
+        explanation: '`$?` holds the exit status of the last executed command (0 = success, non-zero = error). `$$` = current PID, `$#` = argument count, `$0` = script name.',
+      },
+      {
+        id: 'q105_3',
+        topic: 'T105',
+        text: 'Which command makes a variable available to child processes?',
+        type: 'single',
+        options: ['set VAR=value', 'export VAR=value', 'global VAR=value', 'declare VAR=value'],
+        correct: [1],
+        explanation: '`export VAR=value` (or `export VAR` after assignment) adds the variable to the environment, making it visible to child processes. Variables without export are local to the shell.',
+      },
+      {
+        id: 'q105_4',
+        topic: 'T105',
+        text: 'What is the correct shebang line for a bash script?',
+        type: 'single',
+        options: ['# !/bin/bash', '#!/bin/bash', '#!/usr/bash', '#/bin/bash'],
+        correct: [1],
+        explanation: '`#!/bin/bash` is the shebang (hash-bang). The `#!` must be the very first two characters with NO space before `/`. It tells the kernel which interpreter to use.',
+      },
+      {
+        id: 'q105_5',
+        topic: 'T105',
+        text: 'Which test expression checks if a file exists AND is a regular file?',
+        type: 'single',
+        options: ['[ -e file ]', '[ -f file ]', '[ -r file ]', '[ -d file ]'],
+        correct: [1],
+        explanation: '`-f` tests if the path is a regular file (exists AND is not a directory/device). `-e` tests existence (any type). `-d` tests directory. `-r` tests readability.',
+      },
+    ],
+  },
+  {
+    exam: '102',
+    id: 'T107', label: '107: Administrative Tasks',
+    weight: '10%',
+    subtopics: ['107.1 User Accounts', '107.2 User Groups', '107.3 Localization', '107.4 Cron'],
+    questions: [
+      {
+        id: 'q107_1',
+        topic: 'T107',
+        text: 'Which file stores hashed user passwords on modern Linux?',
+        type: 'single',
+        options: ['/etc/passwd', '/etc/shadow', '/etc/security/passwd', '/var/auth/shadow'],
+        correct: [1],
+        explanation: '`/etc/shadow` stores hashed passwords, readable only by root. `/etc/passwd` stores account info (no password hashes since shadow was introduced).',
+      },
+      {
+        id: 'q107_2',
+        topic: 'T107',
+        text: 'Which command adds a user to a secondary group without changing their primary group?',
+        type: 'single',
+        options: ['usermod -g group user', 'usermod -aG group user', 'groupadd -u user group', 'adduser group user'],
+        correct: [1],
+        explanation: '`usermod -aG group user` APPENDS the user to the supplementary group. The `-a` (append) flag is CRITICAL — without it, `-G` replaces ALL supplementary groups.',
+      },
+      {
+        id: 'q107_3',
+        topic: 'T107',
+        text: 'What does this cron entry do? `0 2 * * 0 /backup.sh`',
+        type: 'single',
+        options: [
+          'Runs backup.sh every 2 hours on Sunday',
+          'Runs backup.sh at 2:00 AM every Sunday',
+          'Runs backup.sh at 2:00 AM on the 1st of every month',
+          'Runs backup.sh every 2 minutes',
+        ],
+        correct: [1],
+        explanation: 'Cron format: minute(0) hour(2) day-of-month(*) month(*) day-of-week(0=Sunday). So: at minute 0, hour 2, any day, any month, on Sunday = 2:00 AM every Sunday.',
+      },
+      {
+        id: 'q107_4',
+        topic: 'T107',
+        text: 'Which command locks a user account?',
+        type: 'single',
+        options: ['passwd -l username', 'usermod -L username', 'chage -E 0 username', 'Both passwd -l and usermod -L'],
+        correct: [3],
+        explanation: 'Both `passwd -l` and `usermod -L` lock an account by prefixing the password hash with `!`. `chage -E 0` sets account expiry to 0 (expired). All methods disable login.',
+      },
+      {
+        id: 'q107_5',
+        topic: 'T107',
+        text: 'Which file controls allowed cron users system-wide?',
+        type: 'single',
+        options: ['/etc/cron.allow and /etc/cron.deny', '/etc/crontab', '/var/spool/cron/', '/etc/crond.conf'],
+        correct: [0],
+        explanation: 'If `/etc/cron.allow` exists, only listed users can use cron. If only `/etc/cron.deny` exists, listed users are blocked. If neither exists, behavior is implementation-defined (usually all allowed).',
+      },
+    ],
+  },
+  {
+    exam: '102',
+    id: 'T108', label: '108: Essential Services',
+    weight: '7%',
+    subtopics: ['108.1 System Time', '108.2 Syslog', '108.3 Mail Transfer', '108.4 Printers'],
+    questions: [
+      {
+        id: 'q108_1',
+        topic: 'T108',
+        text: 'Which command synchronizes the hardware clock to the system clock?',
+        type: 'single',
+        options: ['hwclock --systohc', 'hwclock --hctosys', 'ntpdate', 'timedatectl sync'],
+        correct: [0],
+        explanation: '`hwclock --systohc` sets the hardware clock FROM the system clock. `--hctosys` does the reverse (HW to system). `ntpdate` syncs system time from NTP.',
+      },
+      {
+        id: 'q108_2',
+        topic: 'T108',
+        text: 'Which syslog facility is used for authentication messages?',
+        type: 'single',
+        options: ['kern', 'auth', 'user', 'daemon'],
+        correct: [1],
+        explanation: '`auth` (or `authpriv` for private auth messages) is the syslog facility for authentication. `kern` = kernel messages, `daemon` = system daemons, `user` = user-level.',
+      },
+      {
+        id: 'q108_3',
+        topic: 'T108',
+        text: 'Which log file typically records failed login attempts on a Debian system?',
+        type: 'single',
+        options: ['/var/log/auth.log', '/var/log/secure', '/var/log/syslog', '/var/log/faillog'],
+        correct: [0],
+        explanation: '`/var/log/auth.log` is standard on Debian/Ubuntu. `/var/log/secure` is the equivalent on RHEL/CentOS. `/var/log/faillog` tracks failed logins too but is less comprehensive.',
+      },
+    ],
+  },
+  {
+    exam: '102',
+    id: 'T109', label: '109: Networking',
+    weight: '14%',
+    subtopics: ['109.1 Fundamentals', '109.2 Persistent Config', '109.3 Basic Troubleshooting', '109.4 DNS'],
+    questions: [
+      {
+        id: 'q109_1',
+        topic: 'T109',
+        text: 'Which command shows the routing table?',
+        type: 'single',
+        options: ['ifconfig -r', 'netstat -r', 'route -n', 'Both netstat -r and route -n'],
+        correct: [3],
+        explanation: 'Both `netstat -r` and `route -n` display the kernel routing table. `-n` shows numeric addresses (faster, no DNS lookups). The modern `ip route show` is preferred.',
+      },
+      {
+        id: 'q109_2',
+        topic: 'T109',
+        text: 'Which file maps hostnames to IP addresses locally (before DNS)?',
+        type: 'single',
+        options: ['/etc/dns', '/etc/hostname', '/etc/hosts', '/etc/resolv.conf'],
+        correct: [2],
+        explanation: '`/etc/hosts` maps hostnames to IPs locally. `/etc/resolv.conf` configures DNS server addresses. The `/etc/nsswitch.conf` `hosts` entry controls lookup order (files then dns).',
+      },
+      {
+        id: 'q109_3',
+        topic: 'T109',
+        text: 'What is the default subnet mask for a Class C network?',
+        type: 'single',
+        options: ['255.0.0.0', '255.255.0.0', '255.255.255.0', '255.255.255.255'],
+        correct: [2],
+        explanation: 'Class C: 255.255.255.0 (/24). Class A: 255.0.0.0 (/8). Class B: 255.255.0.0 (/16). Class C networks range from 192.0.0.0 to 223.255.255.255.',
+      },
+      {
+        id: 'q109_4',
+        topic: 'T109',
+        text: 'Which command tests connectivity to a host and shows round-trip time?',
+        type: 'single',
+        options: ['traceroute', 'ping', 'netstat', 'nslookup'],
+        correct: [1],
+        explanation: '`ping` sends ICMP echo requests and shows round-trip time (RTT). `traceroute` shows the path (each hop). `netstat` shows connections. `nslookup` queries DNS.',
+      },
+      {
+        id: 'q109_5',
+        topic: 'T109',
+        text: 'Which port does SSH use by default?',
+        type: 'single',
+        options: ['21', '22', '23', '25'],
+        correct: [1],
+        explanation: 'SSH uses port 22. FTP=21, Telnet=23, SMTP=25. These are IANA-assigned well-known ports (0-1023).',
+      },
+      {
+        id: 'q109_6',
+        topic: 'T109',
+        text: 'Which command displays all active network connections and listening ports?',
+        type: 'single',
+        options: ['netstat -tuln', 'ifconfig -a', 'ip link show', 'ss -tuln'],
+        correct: [3],
+        explanation: 'Both `ss -tuln` and `netstat -tuln` work, but `ss` is the modern replacement. Flags: -t TCP, -u UDP, -l listening, -n numeric. `ss` is faster as it reads from kernel directly.',
+      },
+      {
+        id: 'q109_7',
+        topic: 'T109',
+        text: 'What does /etc/resolv.conf configure?',
+        type: 'single',
+        options: ['Local hostname mappings', 'DNS resolver configuration (nameserver addresses)', 'Network interface settings', 'Routing table'],
+        correct: [1],
+        explanation: '`/etc/resolv.conf` specifies DNS nameserver IP addresses (up to 3), search domains, and resolver options. Example: `nameserver 8.8.8.8`.',
+      },
+    ],
+  },
+  {
+    exam: '102',
+    id: 'T110', label: '110: Security',
+    weight: '10%',
+    subtopics: ['110.1 Security Admin', '110.2 Host Security', '110.3 Encryption'],
+    questions: [
+      {
+        id: 'q110_1',
+        topic: 'T110',
+        text: 'Which command generates an SSH key pair?',
+        type: 'single',
+        options: ['ssh-keygen', 'ssh-keycreate', 'openssl genrsa', 'gpg --gen-key'],
+        correct: [0],
+        explanation: '`ssh-keygen` generates SSH key pairs (default: RSA 3072 bits). Common usage: `ssh-keygen -t ed25519 -C "comment"`. The public key goes in `~/.ssh/authorized_keys` on the server.',
+      },
+      {
+        id: 'q110_2',
+        topic: 'T110',
+        text: 'Which command lists open files and the processes using them?',
+        type: 'single',
+        options: ['ps aux', 'lsof', 'fuser', 'netstat -p'],
+        correct: [1],
+        explanation: '`lsof` (list open files) shows all open files and their processes. `fuser` shows which processes use a file/socket. `lsof -i :80` shows what\'s using port 80.',
+      },
+      {
+        id: 'q110_3',
+        topic: 'T110',
+        text: 'What is sudo used for?',
+        type: 'single',
+        options: [
+          'Switch user (like su)',
+          'Execute commands as another user (typically root) per /etc/sudoers policy',
+          'Elevate all shell permissions permanently',
+          'Create a secure encrypted shell session',
+        ],
+        correct: [1],
+        explanation: '`sudo` allows authorized users to run specific commands as root (or another user) based on `/etc/sudoers`. Each command is logged. More granular than `su` which gives full root shell.',
+      },
+      {
+        id: 'q110_4',
+        topic: 'T110',
+        text: 'Which command displays and manages firewall rules using iptables?',
+        type: 'single',
+        options: ['iptables -L', 'iptables -S', 'ufw status', 'firewalld --list'],
+        correct: [0],
+        explanation: '`iptables -L` lists all rules. `-L -n -v` adds numeric output and packet/byte counts. `ufw` and `firewalld` are higher-level wrappers that use iptables/nftables underneath.',
+      },
+    ],
+  },
+];
+
+const ALL_QUESTIONS = EXAM_TOPICS.flatMap(t => t.questions);
+
+// ─── PROGRESS STORE ──────────────────────────────────────────────────────────
+
+function useProgress() {
+  const [progress, setProgress] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('lpic1_progress') || '{}'); } catch { return {}; }
+  });
+
+  const saveAnswer = useCallback((qid, correct, selected) => {
+    setProgress(prev => {
+      const next = { ...prev, [qid]: { correct, selected, timestamp: Date.now() } };
+      localStorage.setItem('lpic1_progress', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const resetTopic = useCallback((topicId) => {
+    setProgress(prev => {
+      const next = { ...prev };
+      EXAM_TOPICS.find(t => t.id === topicId)?.questions.forEach(q => delete next[q.id]);
+      localStorage.setItem('lpic1_progress', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const resetAll = useCallback(() => {
+    setProgress({});
+    localStorage.removeItem('lpic1_progress');
+  }, []);
+
+  return { progress, saveAnswer, resetTopic, resetAll };
+}
+
+// ─── ICONS ───────────────────────────────────────────────────────────────────
+
+const Icon = ({ name, size = 16, className = '' }) => {
+  const icons = {
+    home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+    exam: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+    chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
+    x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    arrow: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+    reset: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+    info: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+    terminal: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
+    trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2"/><rect x="6" y="18" width="12" height="4"/></svg>,
+    close: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+    menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  };
+  return icons[name] || null;
+};
+
+// ─── PROGRESS RING ───────────────────────────────────────────────────────────
+
+const ProgressRing = ({ pct, size = 56, stroke = 4, color = '#22C55E' }) => {
+  const r = (size - stroke * 2) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  return (
+    <svg width={size} height={size}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1E293B" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+        className="progress-ring" />
+      <text x={size/2} y={size/2 + 1} textAnchor="middle" dominantBaseline="middle"
+        fill={color} fontSize={size * 0.22} fontWeight="700" fontFamily="Plus Jakarta Sans">
+        {Math.round(pct)}%
+      </text>
+    </svg>
+  );
+};
+
+// ─── QUESTION CARD ───────────────────────────────────────────────────────────
+
+const QuestionCard = ({ question, onAnswer, savedAnswer }) => {
+  const [selected, setSelected] = useState(savedAnswer ? savedAnswer.selected : []);
+  const [submitted, setSubmitted] = useState(!!savedAnswer);
+  const [showExpl, setShowExpl] = useState(false);
+
+  const isMulti = question.type === 'multi';
+
+  const toggle = (idx) => {
+    if (submitted) return;
+    if (isMulti) {
+      setSelected(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
+    } else {
+      setSelected([idx]);
+    }
+  };
+
+  const submit = () => {
+    if (selected.length === 0) return;
+    const correct = JSON.stringify([...selected].sort()) === JSON.stringify([...question.correct].sort());
+    setSubmitted(true);
+    onAnswer(question.id, correct, selected);
+  };
+
+  const getOptionClass = (idx) => {
+    if (!submitted) return selected.includes(idx) ? 'bg-blue-900/40 border-info' : 'bg-surface border-border';
+    const isCorrect = question.correct.includes(idx);
+    const isSelected = selected.includes(idx);
+    if (isCorrect) return 'correct';
+    if (isSelected && !isCorrect) return 'incorrect';
+    return 'bg-surface border-border opacity-50';
+  };
+
+  const wasCorrect = submitted && JSON.stringify([...selected].sort()) === JSON.stringify([...question.correct].sort());
+
+  return (
+    <div className="fade-in">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="flex-1">
+          <p className="text-textPrimary text-base leading-relaxed font-medium">{question.text}</p>
+          {isMulti && <p className="text-textMuted text-xs mt-1">(Select all that apply)</p>}
+        </div>
+        {submitted && (
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${wasCorrect ? 'bg-accent/20 text-accent' : 'bg-danger/20 text-danger'}`}>
+            <Icon name={wasCorrect ? 'check' : 'x'} size={14} />
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2 mb-4">
+        {question.options.map((opt, idx) => (
+          <button
+            key={idx}
+            onClick={() => toggle(idx)}
+            disabled={submitted}
+            className={`option-btn w-full text-left px-4 py-3 rounded-lg border text-sm cursor-pointer ${getOptionClass(idx)} ${!submitted ? 'hover:cursor-pointer' : 'cursor-default'}`}
+          >
+            <div className="flex items-start gap-3">
+              <span className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center text-xs font-mono mt-0.5 ${
+                selected.includes(idx) ? 'bg-info border-info text-white' : 'border-border text-textMuted'
+              }`}>
+                {isMulti ? (selected.includes(idx) ? '✓' : '') : String.fromCharCode(65 + idx)}
+              </span>
+              <span className="font-mono text-xs leading-relaxed">{opt}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {!submitted && (
+        <button
+          onClick={submit}
+          disabled={selected.length === 0}
+          className="px-5 py-2.5 bg-accent hover:bg-accentHover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-all duration-150 cursor-pointer"
+        >
+          Submit Answer
+        </button>
+      )}
+
+      {submitted && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowExpl(!showExpl)}
+            className="flex items-center gap-2 text-info text-sm hover:text-blue-300 transition-colors cursor-pointer"
+          >
+            <Icon name="info" size={14} />
+            {showExpl ? 'Hide explanation' : 'Show explanation'}
+          </button>
+          {showExpl && (
+            <div className="mt-2 p-3 bg-surface/60 border border-border rounded-lg text-textMuted text-sm leading-relaxed terminal-text">
+              {question.explanation}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── EXAM MODE ───────────────────────────────────────────────────────────────
+
+const ExamMode = ({ topicId, onBack, progress, saveAnswer }) => {
+  const topic = EXAM_TOPICS.find(t => t.id === topicId);
+  const questions = topic.questions;
+  const [current, setCurrent] = useState(0);
+  const answered = questions.filter(q => progress[q.id]).length;
+
+  return (
+    <div className="max-w-2xl mx-auto fade-in">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="p-2 hover:bg-surface rounded-lg transition-colors cursor-pointer text-textMuted hover:text-textPrimary">
+          <Icon name="back" size={18} />
+        </button>
+        <div className="flex-1">
+          <h2 className="text-lg font-bold text-textPrimary">{topic.label}</h2>
+          <p className="text-textMuted text-sm">{answered}/{questions.length} answered</p>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full h-1.5 bg-surface rounded-full mb-6">
+        <div className="h-1.5 bg-accent rounded-full transition-all duration-500" style={{ width: `${(answered/questions.length)*100}%` }} />
+      </div>
+
+      {/* Question navigator */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {questions.map((q, i) => {
+          const ans = progress[q.id];
+          return (
+            <button key={i} onClick={() => setCurrent(i)}
+              className={`w-9 h-9 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                i === current ? 'bg-info text-white' :
+                ans?.correct ? 'bg-accent/20 text-accent border border-accent/30' :
+                ans ? 'bg-danger/20 text-danger border border-danger/30' :
+                'bg-surface text-textMuted hover:bg-border'
+              }`}>
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Question */}
+      <div className="bg-surface border border-border rounded-xl p-6">
+        <div className="text-textDim text-xs font-mono mb-4 flex items-center gap-2">
+          <Icon name="terminal" size={12} />
+          Question {current + 1} of {questions.length}
+        </div>
+        <QuestionCard
+          key={questions[current].id}
+          question={questions[current]}
+          savedAnswer={progress[questions[current].id]}
+          onAnswer={(id, correct, selected) => {
+            saveAnswer(id, correct, selected);
+          }}
+        />
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-between mt-4">
+        <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-surface border border-border text-textMuted hover:text-textPrimary hover:border-info rounded-lg text-sm disabled:opacity-30 transition-all cursor-pointer">
+          <Icon name="back" size={14} /> Previous
+        </button>
+        <button onClick={() => setCurrent(Math.min(questions.length - 1, current + 1))} disabled={current === questions.length - 1}
+          className="flex items-center gap-2 px-4 py-2 bg-surface border border-border text-textMuted hover:text-textPrimary hover:border-info rounded-lg text-sm disabled:opacity-30 transition-all cursor-pointer">
+          Next <Icon name="arrow" size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── MOCK EXAM ────────────────────────────────────────────────────────────────
+
+const MockExam = ({ onBack, progress, saveAnswer }) => {
+  const [examSet] = useState(() => {
+    const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 30);
+  });
+  const [current, setCurrent] = useState(0);
+  const [localAnswers, setLocalAnswers] = useState({});
+  const [finished, setFinished] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 min
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) { clearInterval(timerRef.current); setFinished(true); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  const handleAnswer = (id, correct, selected) => {
+    setLocalAnswers(prev => ({ ...prev, [id]: { correct, selected } }));
+    saveAnswer(id, correct, selected);
+  };
+
+  const score = Object.values(localAnswers).filter(a => a.correct).length;
+  const pct = Math.round((score / examSet.length) * 100);
+  const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+  const ss = String(timeLeft % 60).padStart(2, '0');
+  const passed = pct >= 60;
+
+  if (finished || Object.keys(localAnswers).length === examSet.length) {
+    return (
+      <div className="max-w-2xl mx-auto fade-in text-center py-10">
+        <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${passed ? 'bg-accent/20' : 'bg-danger/20'}`}>
+          <Icon name={passed ? 'trophy' : 'x'} size={36} className={passed ? 'text-accent' : 'text-danger'} />
+        </div>
+        <h2 className="text-3xl font-bold text-textPrimary mb-2">{passed ? 'Exam Passed!' : 'Keep Studying'}</h2>
+        <p className="text-textMuted mb-6">You scored {score}/{examSet.length} ({pct}%). Pass mark is 60%.</p>
+        <div className="inline-block mb-8"><ProgressRing pct={pct} size={100} stroke={6} color={passed ? '#22C55E' : '#EF4444'} /></div>
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-2xl font-bold text-accent">{score}</div>
+            <div className="text-textMuted text-sm">Correct</div>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-2xl font-bold text-danger">{examSet.length - score}</div>
+            <div className="text-textMuted text-sm">Wrong</div>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-2xl font-bold text-info">{pct}%</div>
+            <div className="text-textMuted text-sm">Score</div>
+          </div>
+        </div>
+        <button onClick={onBack} className="px-6 py-3 bg-accent hover:bg-accentHover text-white font-semibold rounded-xl cursor-pointer transition-all">
+          Back to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  const answered = Object.keys(localAnswers).length;
+
+  return (
+    <div className="max-w-2xl mx-auto fade-in">
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={onBack} className="p-2 hover:bg-surface rounded-lg text-textMuted hover:text-textPrimary transition-colors cursor-pointer">
+          <Icon name="back" size={18} />
+        </button>
+        <div className="flex-1">
+          <h2 className="text-lg font-bold text-textPrimary">Mock Exam — 30 Questions</h2>
+          <p className="text-textMuted text-sm">{answered}/30 answered</p>
+        </div>
+        <div className={`font-mono text-lg font-bold px-3 py-1 rounded-lg ${timeLeft < 300 ? 'text-danger bg-danger/10' : 'text-accent bg-accent/10'}`}>
+          {mm}:{ss}
+        </div>
+      </div>
+
+      <div className="w-full h-1.5 bg-surface rounded-full mb-4">
+        <div className="h-1.5 bg-accent rounded-full transition-all duration-300" style={{ width: `${(answered/30)*100}%` }} />
+      </div>
+
+      <div className="flex gap-1.5 mb-5 flex-wrap">
+        {examSet.map((q, i) => (
+          <button key={i} onClick={() => setCurrent(i)}
+            className={`w-8 h-8 rounded text-xs font-bold transition-all cursor-pointer ${
+              i === current ? 'bg-info text-white' :
+              localAnswers[q.id]?.correct ? 'bg-accent/20 text-accent' :
+              localAnswers[q.id] ? 'bg-danger/20 text-danger' :
+              'bg-surface text-textMuted hover:bg-border'
+            }`}>
+            {i + 1}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-surface border border-border rounded-xl p-6 mb-4">
+        <div className="text-xs font-mono text-textDim mb-4 flex items-center gap-2">
+          <Icon name="terminal" size={12} />
+          Q{current + 1} — {EXAM_TOPICS.find(t => t.id === examSet[current].topic)?.label}
+        </div>
+        <QuestionCard
+          key={examSet[current].id}
+          question={examSet[current]}
+          savedAnswer={localAnswers[examSet[current].id]}
+          onAnswer={handleAnswer}
+        />
+      </div>
+
+      <div className="flex justify-between">
+        <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-surface border border-border text-textMuted hover:text-textPrimary rounded-lg text-sm disabled:opacity-30 transition-all cursor-pointer">
+          <Icon name="back" size={14} /> Previous
+        </button>
+        {answered === examSet.length ? (
+          <button onClick={() => setFinished(true)}
+            className="flex items-center gap-2 px-6 py-2 bg-accent hover:bg-accentHover text-white font-semibold rounded-lg text-sm cursor-pointer transition-all">
+            Finish Exam <Icon name="trophy" size={14} />
+          </button>
+        ) : (
+          <button onClick={() => setCurrent(Math.min(examSet.length - 1, current + 1))} disabled={current === examSet.length - 1}
+            className="flex items-center gap-2 px-4 py-2 bg-surface border border-border text-textMuted hover:text-textPrimary rounded-lg text-sm disabled:opacity-30 transition-all cursor-pointer">
+            Next <Icon name="arrow" size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+const Dashboard = ({ progress, onTopicSelect, onMockExam, onStats, resetAll }) => {
+  const totalQ = ALL_QUESTIONS.length;
+  const answeredQ = Object.keys(progress).length;
+  const correctQ = Object.values(progress).filter(a => a.correct).length;
+  const overallPct = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+
+  return (
+    <div className="fade-in space-y-8">
+      {/* Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-surface to-bg border border-border rounded-2xl p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="terminal" size={16} className="text-accent" />
+              <span className="text-accent text-sm font-mono font-semibold tracking-wider">LPIC-1 STUDY HUB</span>
+            </div>
+            <h1 className="text-3xl font-bold text-textPrimary glow-accent mb-2">Linux Professional<br />Institute Certification</h1>
+            <p className="text-textMuted text-sm max-w-md">
+              Practice questions for LPIC-1 exams 101 and 102. All topics covered, same question structure as the real exam.
+            </p>
+            <div className="flex gap-3 mt-5">
+              <button onClick={onMockExam}
+                className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accentHover text-white font-semibold rounded-xl text-sm transition-all cursor-pointer">
+                <Icon name="exam" size={15} /> Take Mock Exam
+              </button>
+              <button onClick={resetAll}
+                className="flex items-center gap-2 px-5 py-2.5 bg-surface hover:bg-border border border-border text-textMuted hover:text-textPrimary rounded-xl text-sm transition-all cursor-pointer">
+                <Icon name="reset" size={15} /> Reset All
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <ProgressRing pct={overallPct} size={80} stroke={5} />
+            <span className="text-textMuted text-xs">{answeredQ}/{totalQ} answered</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Questions', value: totalQ, color: 'text-info' },
+          { label: 'Answered', value: answeredQ, color: 'text-warning' },
+          { label: 'Correct', value: correctQ, color: 'text-accent' },
+          { label: 'Score', value: `${overallPct}%`, color: overallPct >= 60 ? 'text-accent' : 'text-danger' },
+        ].map(s => (
+          <div key={s.label} className="bg-surface border border-border rounded-xl p-4 card-hover">
+            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+            <div className="text-textMuted text-xs mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Exam 101 */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="px-2 py-0.5 bg-info/20 text-info text-xs font-mono font-bold rounded">EXAM 101</span>
+          <h2 className="text-textPrimary font-semibold">System & Commands</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {EXAM_TOPICS.filter(t => t.exam === '101').map(topic => {
+            const topicQs = topic.questions;
+            const done = topicQs.filter(q => progress[q.id]).length;
+            const correct = topicQs.filter(q => progress[q.id]?.correct).length;
+            const pct = topicQs.length > 0 ? Math.round((done / topicQs.length) * 100) : 0;
+            return (
+              <button key={topic.id} onClick={() => onTopicSelect(topic.id)}
+                className="bg-surface border border-border hover:border-info/50 rounded-xl p-5 text-left card-hover transition-all cursor-pointer group">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-semibold text-textPrimary text-sm group-hover:text-info transition-colors">{topic.label}</h3>
+                    <p className="text-textDim text-xs mt-1">{topicQs.length} questions · weight {topic.weight}</p>
+                  </div>
+                  <ProgressRing pct={pct} size={40} stroke={3} color={pct === 100 ? '#22C55E' : '#3B82F6'} />
+                </div>
+                <div className="w-full h-1 bg-bg rounded-full overflow-hidden">
+                  <div className="h-1 bg-info rounded-full transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="flex justify-between mt-2">
+                  <span className="text-textDim text-xs">{done}/{topicQs.length} done</span>
+                  <span className="text-accent text-xs">{correct} correct</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Exam 102 */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="px-2 py-0.5 bg-accent/20 text-accent text-xs font-mono font-bold rounded">EXAM 102</span>
+          <h2 className="text-textPrimary font-semibold">Admin, Services & Security</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {EXAM_TOPICS.filter(t => t.exam === '102').map(topic => {
+            const topicQs = topic.questions;
+            const done = topicQs.filter(q => progress[q.id]).length;
+            const correct = topicQs.filter(q => progress[q.id]?.correct).length;
+            const pct = topicQs.length > 0 ? Math.round((done / topicQs.length) * 100) : 0;
+            return (
+              <button key={topic.id} onClick={() => onTopicSelect(topic.id)}
+                className="bg-surface border border-border hover:border-accent/50 rounded-xl p-5 text-left card-hover transition-all cursor-pointer group">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-semibold text-textPrimary text-sm group-hover:text-accent transition-colors">{topic.label}</h3>
+                    <p className="text-textDim text-xs mt-1">{topicQs.length} questions · weight {topic.weight}</p>
+                  </div>
+                  <ProgressRing pct={pct} size={40} stroke={3} color={pct === 100 ? '#22C55E' : '#22C55E'} />
+                </div>
+                <div className="w-full h-1 bg-bg rounded-full overflow-hidden">
+                  <div className="h-1 bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="flex justify-between mt-2">
+                  <span className="text-textDim text-xs">{done}/{topicQs.length} done</span>
+                  <span className="text-accent text-xs">{correct} correct</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Cheat sheet */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <Icon name="terminal" size={14} className="text-warning" />
+          <h2 className="text-textPrimary font-semibold">Quick Reference</h2>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-5 overflow-x-auto">
+          <table className="w-full text-sm terminal-text">
+            <thead>
+              <tr className="text-textDim text-xs border-b border-border">
+                <th className="text-left pb-2 pr-6">Command</th>
+                <th className="text-left pb-2 pr-6">Description</th>
+                <th className="text-left pb-2">Topic</th>
+              </tr>
+            </thead>
+            <tbody className="text-textMuted">
+              {[
+                ['lspci / lsusb', 'List PCI / USB devices', '101'],
+                ['systemctl get-default', 'Show default systemd target', '101'],
+                ['dpkg -i pkg.deb', 'Install local .deb package', '102'],
+                ['ldd /bin/ls', 'Show shared library deps', '102'],
+                ['find . -mtime -1', 'Files modified < 24h ago', '103'],
+                ['grep -rn "pattern" .', 'Recursive search with line numbers', '103'],
+                ['chmod 755 / chown', 'Set permissions / ownership', '104'],
+                ['ln -s target link', 'Create symbolic link', '104'],
+                ['usermod -aG grp usr', 'Add user to supplementary group', '107'],
+                ['crontab -e / -l', 'Edit / list user cron jobs', '107'],
+                ['ss -tuln', 'Show listening ports (modern)', '109'],
+                ['ip route show', 'Show routing table (modern)', '109'],
+                ['ssh-keygen -t ed25519', 'Generate Ed25519 SSH key pair', '110'],
+                ['iptables -L -n -v', 'List firewall rules', '110'],
+              ].map(([cmd, desc, topic]) => (
+                <tr key={cmd} className="border-b border-border/30 hover:bg-bg/50">
+                  <td className="py-2 pr-6 text-accent font-mono text-xs">{cmd}</td>
+                  <td className="py-2 pr-6 text-xs">{desc}</td>
+                  <td className="py-2"><span className="px-1.5 py-0.5 bg-surface border border-border rounded text-xs text-textDim">{topic}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+
+const App = () => {
+  const { progress, saveAnswer, resetTopic, resetAll } = useProgress();
+  const [view, setView] = useState('dashboard'); // 'dashboard' | 'topic:{id}' | 'mock'
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const currentTopicId = view.startsWith('topic:') ? view.split(':')[1] : null;
+  const isMock = view === 'mock';
+
+  const totalQ = ALL_QUESTIONS.length;
+  const answeredQ = Object.keys(progress).length;
+  const overallPct = totalQ > 0 ? Math.round((Object.values(progress).filter(a => a.correct).length / totalQ) * 100) : 0;
+
+  return (
+    <div className="min-h-screen bg-bg flex">
+      {/* Sidebar overlay (mobile) */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 h-full w-64 bg-surface border-r border-border z-40 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        {/* Logo */}
+        <div className="p-5 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
+              <Icon name="terminal" size={16} className="text-accent" />
+            </div>
+            <div>
+              <div className="font-bold text-textPrimary text-sm">LPIC-1</div>
+              <div className="text-textDim text-xs font-mono">Study Hub</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          <button onClick={() => { setView('dashboard'); setSidebarOpen(false); }}
+            className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer ${view === 'dashboard' ? 'bg-accent/10 text-accent' : 'text-textMuted hover:text-textPrimary'}`}>
+            <Icon name="home" size={15} /> Dashboard
+          </button>
+          <button onClick={() => { setView('mock'); setSidebarOpen(false); }}
+            className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer ${isMock ? 'bg-accent/10 text-accent' : 'text-textMuted hover:text-textPrimary'}`}>
+            <Icon name="exam" size={15} /> Mock Exam
+          </button>
+
+          <div className="pt-3 pb-1">
+            <p className="text-textDim text-xs font-mono px-3 pb-1">EXAM 101</p>
+          </div>
+          {EXAM_TOPICS.filter(t => t.exam === '101').map(topic => {
+            const done = topic.questions.filter(q => progress[q.id]).length;
+            const isActive = view === `topic:${topic.id}`;
+            return (
+              <button key={topic.id} onClick={() => { setView(`topic:${topic.id}`); setSidebarOpen(false); }}
+                className={`sidebar-item w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer ${isActive ? 'bg-info/10 text-info' : 'text-textMuted hover:text-textPrimary'}`}>
+                <span className="truncate">{topic.label.split(':')[1]?.trim() || topic.label}</span>
+                <span className={`flex-shrink-0 text-xs font-mono ${done === topic.questions.length && done > 0 ? 'text-accent' : 'text-textDim'}`}>
+                  {done}/{topic.questions.length}
+                </span>
+              </button>
+            );
+          })}
+
+          <div className="pt-3 pb-1">
+            <p className="text-textDim text-xs font-mono px-3 pb-1">EXAM 102</p>
+          </div>
+          {EXAM_TOPICS.filter(t => t.exam === '102').map(topic => {
+            const done = topic.questions.filter(q => progress[q.id]).length;
+            const isActive = view === `topic:${topic.id}`;
+            return (
+              <button key={topic.id} onClick={() => { setView(`topic:${topic.id}`); setSidebarOpen(false); }}
+                className={`sidebar-item w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer ${isActive ? 'bg-accent/10 text-accent' : 'text-textMuted hover:text-textPrimary'}`}>
+                <span className="truncate">{topic.label.split(':')[1]?.trim() || topic.label}</span>
+                <span className={`flex-shrink-0 text-xs font-mono ${done === topic.questions.length && done > 0 ? 'text-accent' : 'text-textDim'}`}>
+                  {done}/{topic.questions.length}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom stats */}
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-textDim text-xs">Overall Progress</span>
+            <span className="text-accent text-xs font-bold font-mono">{overallPct}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-bg rounded-full">
+            <div className="h-1.5 bg-accent rounded-full transition-all" style={{ width: `${overallPct}%` }} />
+          </div>
+          <div className="text-textDim text-xs mt-1">{answeredQ}/{totalQ} questions answered</div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
+        {/* Top bar */}
+        <header className="sticky top-0 z-20 bg-bg/90 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-4">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden p-2 text-textMuted hover:text-textPrimary cursor-pointer">
+            <Icon name="menu" size={20} />
+          </button>
+          <div className="flex items-center gap-2 text-sm text-textMuted">
+            <span className="text-textDim cursor-pointer hover:text-textPrimary" onClick={() => setView('dashboard')}>Dashboard</span>
+            {currentTopicId && (
+              <>
+                <span className="text-textDim">/</span>
+                <span className="text-textPrimary">{EXAM_TOPICS.find(t => t.id === currentTopicId)?.label}</span>
+              </>
+            )}
+            {isMock && (
+              <>
+                <span className="text-textDim">/</span>
+                <span className="text-textPrimary">Mock Exam</span>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="flex-1 p-6 max-w-4xl w-full mx-auto">
+          {view === 'dashboard' && (
+            <Dashboard
+              progress={progress}
+              onTopicSelect={(id) => setView(`topic:${id}`)}
+              onMockExam={() => setView('mock')}
+              resetAll={resetAll}
+            />
+          )}
+          {currentTopicId && (
+            <ExamMode
+              topicId={currentTopicId}
+              onBack={() => setView('dashboard')}
+              progress={progress}
+              saveAnswer={saveAnswer}
+            />
+          )}
+          {isMock && (
+            <MockExam
+              onBack={() => setView('dashboard')}
+              progress={progress}
+              saveAnswer={saveAnswer}
+            />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+// ─── MOUNT ───────────────────────────────────────────────────────────────────
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
