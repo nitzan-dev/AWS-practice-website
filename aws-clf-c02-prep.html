@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Cloud Practitioner CLF-C02 Prep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── AWS Design Tokens ── */
+:root {
+  /* AWS brand palette */
+  --aws-squid:   #232F3E;   /* header / nav */
+  --aws-squid2:  #1A2332;   /* darker nav variant */
+  --aws-orange:  #FF9900;   /* primary CTA */
+  --aws-orange2: #E68A00;   /* hover */
+  --aws-smile:   #FF9900;
+  --aws-blue:    #0073BB;   /* link / secondary action */
+  --aws-blue2:   #005E9B;
+
+  /* Surface */
+  --bg:       #F2F3F3;      /* AWS console light grey bg */
+  --surface:  #FFFFFF;
+  --surface2: #F8F8F8;
+  --surface3: #EAEDED;
+  --border:   #D5DBDB;
+  --border2:  #AAB7B8;
+
+  /* Text */
+  --text:       #16191F;
+  --text-2:     #252F3E;
+  --text-muted: #5F6B7A;
+  --text-light: #879596;
+
+  /* Status */
+  --green:  #1D8102;
+  --green-bg: #D5F5E3;
+  --red:    #D13212;
+  --red-bg: #FDECEA;
+  --yellow: #8D6708;
+  --yellow-bg: #FEF9E7;
+  --info:   #0073BB;
+  --info-bg: #EBF5FB;
+
+  --radius: 4px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,28,36,0.12);
+  --shadow:    0 2px 8px rgba(0,28,36,0.15);
+  --shadow-lg: 0 4px 20px rgba(0,28,36,0.2);
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, 'Amazon Ember', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* ── Layout ── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── AWS Top Nav ── */
+.navbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--aws-squid);
+  padding: 0 20px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.navbar-brand {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 15px; font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+}
+.navbar-brand .nav-logo {
+  display: flex; align-items: center; gap: 2px;
+}
+.navbar-brand .nav-sep {
+  width: 1px; height: 28px; background: rgba(255,255,255,0.25); margin: 0 14px;
+}
+.navbar-brand .nav-title {
+  color: #fff; font-size: 14px; font-weight: 500;
+}
+.navbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+/* AWS primary = orange */
+.btn-primary {
+  background: var(--aws-orange);
+  color: #111;
+  border-color: #d4820a;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.btn-primary:hover { background: var(--aws-orange2); border-color: #b86e08; }
+
+/* AWS secondary = white outline (for dark navbars) */
+.btn-nav {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255,255,255,0.4);
+  font-size: 13px;
+}
+.btn-nav:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
+
+/* AWS ghost = normal page secondary */
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border2);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.btn-ghost:hover { background: var(--surface3); border-color: var(--border2); }
+
+.btn-danger { background: var(--red); color: #fff; border-color: #b82a0f; }
+.btn-danger:hover { background: #b82a0f; }
+.btn-success { background: var(--green); color: #fff; border-color: #166a00; }
+.btn-success:hover { background: #166a00; }
+.btn-link { background: none; border: none; color: var(--aws-blue); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+.btn-link:hover { text-decoration: underline; }
+
+/* ── Sub-navigation bar ── */
+.subnav {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 0;
+}
+.subnav-btn {
+  padding: 12px 16px;
+  border: none; background: none;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.subnav-btn:hover { color: var(--text); }
+.subnav-btn.active { color: var(--aws-orange); border-bottom-color: var(--aws-orange); }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Hero Banner (AWS console style) ── */
+.hero-banner {
+  background: var(--aws-squid);
+  padding: 48px 24px 56px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-banner::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--aws-orange) 0%, #ffb84d 50%, var(--aws-orange) 100%);
+}
+.hero-banner-inner { max-width: 1100px; margin: 0 auto; }
+.hero-cert-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,153,0,0.15);
+  border: 1px solid rgba(255,153,0,0.4);
+  color: var(--aws-orange);
+  padding: 5px 14px; border-radius: 3px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; margin-bottom: 18px;
+}
+.hero-banner h1 {
+  font-size: clamp(26px,4vw,44px);
+  font-weight: 800; color: #fff;
+  line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.02em;
+}
+.hero-banner h1 span { color: var(--aws-orange); }
+.hero-banner p { color: #C5CDD6; font-size: 16px; max-width: 580px; margin-bottom: 28px; line-height: 1.6; }
+.hero-cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── Main content area ── */
+.home { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── AWS Section heading ── */
+.section-title {
+  font-size: 20px; font-weight: 800;
+  color: var(--text-2);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+  letter-spacing: -0.01em;
+}
+
+/* ── AWS "panel" card ── */
+.aws-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.aws-panel-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: 15px;
+  background: var(--surface2);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* ── Stats grid ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 14px; margin-bottom: 36px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s;
+}
+.stat-card:hover { box-shadow: var(--shadow); }
+.stat-card .value {
+  font-size: 30px; font-weight: 800;
+  color: var(--aws-orange);
+  line-height: 1;
+}
+.stat-card .label { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
+
+/* ── Domain cards ── */
+.domains-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 14px; margin-bottom: 36px; }
+.domain-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.domain-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--domain-color, var(--aws-orange));
+}
+.domain-card:hover { box-shadow: var(--shadow); border-color: var(--domain-color, var(--aws-orange)); }
+.domain-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text-2); }
+.domain-card .pct { font-size: 32px; font-weight: 800; color: var(--domain-color, var(--aws-orange)); line-height: 1.1; margin-bottom: 4px; }
+.domain-card .meta { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+.progress-bar { background: var(--surface3); border-radius: 2px; height: 5px; margin-top: 12px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: var(--domain-color, var(--aws-orange)); transition: width 0.5s ease; }
+
+/* ── Mode cards ── */
+.modes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 16px; margin-bottom: 36px; }
+.mode-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.mode-card:hover { box-shadow: var(--shadow); border-color: var(--aws-orange); }
+.mode-card .icon {
+  width: 44px; height: 44px; border-radius: var(--radius);
+  background: #FFF3D9;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.mode-card .icon svg { width: 22px; height: 22px; color: var(--aws-orange); }
+.mode-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text-2); }
+.mode-card p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+
+/* ── Exam layout ── */
+.exam-page { display: flex; flex-direction: column; height: calc(100vh - 56px); }
+.exam-header {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+}
+.exam-progress { flex: 1; max-width: 420px; margin: 0 16px; }
+.exam-progress-text { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+.timer {
+  font-size: 20px; font-weight: 800;
+  color: var(--aws-squid);
+  min-width: 76px; text-align: center;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 12px;
+  letter-spacing: 0.04em;
+}
+.timer.warning { color: var(--yellow); background: var(--yellow-bg); border-color: #f0c540; }
+.timer.danger { color: var(--red); background: var(--red-bg); border-color: #e8a39b; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.exam-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Question Nav (sidebar) ── */
+.question-nav {
+  width: 248px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+}
+.question-nav-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--surface2);
+}
+.question-nav-grid { padding: 10px; display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; overflow-y: auto; flex: 1; }
+.q-dot {
+  width: 34px; height: 34px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+  color: var(--text-muted);
+}
+.q-dot:hover { border-color: var(--aws-orange); color: var(--aws-orange); background: #FFF3D9; }
+.q-dot.current { background: var(--aws-orange); border-color: #d4820a; color: #111; }
+.q-dot.answered { background: #E8F5E9; border-color: #8BC34A; color: var(--green); }
+.q-dot.flagged { border-color: #F0B429; color: #8D6708; background: #FEF9E7; }
+.q-dot.correct { background: #E8F5E9; border-color: var(--green); color: var(--green); }
+.q-dot.incorrect { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.nav-legend { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; background: var(--surface2); }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); font-weight: 500; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--border); }
+
+/* ── Question main area ── */
+.question-main { flex: 1; overflow-y: auto; padding: 28px; background: var(--bg); }
+.question-card {
+  max-width: 780px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow-sm);
+}
+.question-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.question-domain {
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 3px;
+  background: #FFF3D9; color: #8D4800;
+  border: 1px solid #FFDFA0;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.flag-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 5px 12px;
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; transition: all 0.15s;
+}
+.flag-btn:hover { border-color: #F0B429; color: var(--yellow); background: var(--yellow-bg); }
+.flag-btn.flagged { border-color: #F0B429; color: var(--yellow); background: var(--yellow-bg); }
+
+.question-text { font-size: 16px; font-weight: 600; line-height: 1.7; margin-bottom: 24px; color: var(--text-2); }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option {
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--surface);
+}
+.option:hover { border-color: var(--aws-orange); background: #FFF9EE; box-shadow: 0 0 0 2px rgba(255,153,0,0.15); }
+.option.selected { border-color: var(--aws-orange); background: #FFF3D9; box-shadow: 0 0 0 2px rgba(255,153,0,0.2); }
+.option.correct { border-color: var(--green); background: var(--green-bg); box-shadow: 0 0 0 2px rgba(29,129,2,0.12); }
+.option.incorrect { border-color: var(--red); background: var(--red-bg); box-shadow: 0 0 0 2px rgba(209,50,18,0.12); }
+.option.reveal-correct { border-color: var(--green); background: var(--green-bg); }
+.option-letter {
+  width: 26px; height: 26px; border-radius: var(--radius);
+  background: var(--surface3); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; flex-shrink: 0;
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+}
+.option.selected .option-letter { background: var(--aws-orange); color: #111; border-color: #d4820a; }
+.option.correct .option-letter { background: var(--green); color: #fff; border-color: #166a00; }
+.option.incorrect .option-letter { background: var(--red); color: #fff; border-color: #b82a0f; }
+.option.reveal-correct .option-letter { background: var(--green); color: #fff; border-color: #166a00; }
+.option-text { font-size: 14px; line-height: 1.6; color: var(--text); }
+
+/* ── Explanation callout ── */
+.explanation {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--aws-orange);
+  border: 1px solid #FFDFA0;
+  border-left: 4px solid var(--aws-orange);
+  background: #FFF9EE;
+  display: none;
+}
+.explanation.show { display: block; }
+.explanation-title {
+  font-size: 11px; font-weight: 800; color: #8D4800;
+  margin-bottom: 6px; letter-spacing: 0.07em; text-transform: uppercase;
+}
+.explanation-text { font-size: 13px; color: #4A3000; line-height: 1.7; }
+
+/* ── Question footer ── */
+.question-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Results ── */
+.results-page { max-width: 860px; margin: 0 auto; padding: 36px 24px; }
+.results-hero { text-align: center; margin-bottom: 36px; }
+.score-circle {
+  width: 148px; height: 148px;
+  border-radius: 50%;
+  border: 5px solid var(--aws-orange);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(255,153,0,0.2);
+}
+.score-circle .score-pct { font-size: 38px; font-weight: 800; color: var(--aws-orange); line-height: 1; }
+.score-circle .score-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+.pass-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 20px; border-radius: 3px; font-weight: 700;
+  font-size: 15px; margin-bottom: 14px;
+}
+.pass-badge.pass { background: var(--green-bg); color: var(--green); border: 1px solid #82C882; }
+.pass-badge.fail { background: var(--red-bg); color: var(--red); border: 1px solid #E8A090; }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; margin-bottom: 28px; }
+.result-stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.result-stat .val { font-size: 22px; font-weight: 800; }
+.result-stat .lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+.domain-results { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.domain-result-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.domain-result-row .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.domain-result-row h4 { font-size: 14px; font-weight: 700; }
+.domain-result-row .pct-text { font-weight: 800; font-size: 16px; }
+
+/* ── Study page ── */
+.study-page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+.study-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  height: fit-content;
+  position: sticky; top: 72px;
+  box-shadow: var(--shadow-sm);
+}
+.study-layout { display: flex; gap: 20px; align-items: flex-start; }
+.study-main { flex: 1; min-width: 0; }
+.study-domain-btn {
+  width: 100%; padding: 11px 16px;
+  background: none; border: none; border-bottom: 1px solid var(--border);
+  text-align: left; cursor: pointer;
+  color: var(--text); font-size: 13px; font-weight: 600;
+  transition: background 0.12s;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.study-domain-btn:hover { background: #FFF9EE; }
+.study-domain-btn.active {
+  background: #FFF3D9; color: #8D4800;
+  border-left: 3px solid var(--aws-orange);
+  padding-left: 13px;
+}
+.study-domain-btn:last-child { border-bottom: none; }
+.study-q-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 24px;
+  margin-bottom: 14px; transition: box-shadow 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.study-q-card:hover { box-shadow: var(--shadow); }
+.study-q-num { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.study-q-text { font-size: 15px; font-weight: 600; margin-bottom: 14px; line-height: 1.65; color: var(--text-2); }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(22,25,31,0.65);
+  display: flex; align-items: center; justify-content: center;
+  display: none;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  max-width: 460px; width: 90%;
+  box-shadow: var(--shadow-lg);
+}
+.modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 10px; color: var(--text-2); }
+.modal p { color: var(--text-muted); margin-bottom: 22px; line-height: 1.6; font-size: 14px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── Chips / status ── */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 700;
+}
+.chip-green { background: var(--green-bg); color: var(--green); border: 1px solid #82C882; }
+.chip-red { background: var(--red-bg); color: var(--red); border: 1px solid #E8A090; }
+
+/* ── Info banner ── */
+.info-row {
+  background: var(--info-bg); border: 1px solid #A8D8F0;
+  border-left: 4px solid var(--info);
+  border-radius: var(--radius); padding: 12px 16px;
+  font-size: 13px; color: #004E8A;
+  margin-bottom: 20px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface3); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #8E9D9E; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .question-nav { display: none; }
+  .exam-body { flex-direction: column; }
+  .study-layout { flex-direction: column; }
+  .study-sidebar { width: 100%; position: static; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ── Utility ── */
+.tag { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.text-aws { color: var(--aws-orange); }
+.text-muted { color: var(--text-muted); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.fs-13 { font-size: 13px; }
+.fs-12 { font-size: 12px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,153,0,0.12); color: #8D4800;
+  border: 1px solid rgba(255,153,0,0.35);
+  padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- AWS Top Nav -->
+<nav class="navbar">
+  <div class="navbar-brand" onclick="showPage('home')">
+    <div class="nav-logo">
+      <!-- AWS Logo SVG -->
+      <svg width="52" height="30" viewBox="0 0 52 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Amazon Web Services">
+        <path d="M14.96 11.08c0 .54.06 .97.16 1.28.12.31.28.65.5.99.08.12.11.24.11.35 0 .15-.09.3-.28.45l-.92.61c-.13.09-.26.13-.38.13-.15 0-.3-.08-.45-.22a4.63 4.63 0 0 1-.54-.7 12.5 12.5 0 0 1-.47-.88c-1.18 1.39-2.66 2.09-4.44 2.09-1.27 0-2.28-.36-3.02-1.09-.74-.73-1.11-1.7-1.11-2.92 0-1.29.45-2.34 1.37-3.13.91-.79 2.13-1.19 3.67-1.19.51 0 1.03.04 1.58.12.55.08 1.11.2 1.7.36v-1.08c0-1.12-.24-1.9-.7-2.36-.47-.46-1.27-.69-2.41-.69-.52 0-1.05.06-1.59.19-.54.13-1.07.3-1.58.52-.24.11-.41.17-.52.2a.92.92 0 0 1-.24.04c-.21 0-.31-.15-.31-.46v-.73c0-.24.03-.42.1-.52.07-.1.2-.2.39-.3a7.98 7.98 0 0 1 1.97-.7 9.46 9.46 0 0 1 2.44-.3c1.86 0 3.22.42 4.1 1.27.87.85 1.31 2.13 1.31 3.86v5.09zm-6.14 2.3c.49 0 1-.09 1.52-.27.53-.18.99-.51 1.38-.96.23-.28.4-.58.49-.92.09-.34.14-.75.14-1.22v-.59a12.4 12.4 0 0 0-1.37-.24 11.2 11.2 0 0 0-1.4-.08c-1 0-1.73.2-2.22.6-.49.4-.73.97-.73 1.71 0 .7.18 1.22.54 1.57.35.36.86.54 1.51.54l.14-.14zm11.95 1.61c-.27 0-.45-.04-.57-.14-.12-.09-.22-.28-.31-.55L17.3 6.41c-.09-.28-.14-.46-.14-.55 0-.22.11-.34.33-.34h1.35c.28 0 .47.04.58.14.11.09.2.28.29.55l2.22 8.75 2.06-8.75c.08-.28.18-.46.29-.55.12-.1.31-.14.6-.14h1.1c.29 0 .48.04.6.14.11.09.22.28.29.55l2.09 8.86 2.29-8.86c.09-.27.19-.46.29-.55.11-.1.3-.14.57-.14h1.28c.22 0 .34.11.34.34 0 .07-.01.14-.03.22-.02.08-.05.19-.11.34l-3.22 7.88c-.09.27-.2.46-.31.55-.12.09-.3.14-.57.14h-1.18c-.29 0-.48-.04-.6-.14-.11-.1-.22-.29-.29-.57l-2.05-8.52-2.04 8.51c-.08.28-.18.47-.29.57-.12.1-.32.14-.61.14h-1.18zm17.15.3c-.77 0-1.54-.09-2.28-.27a6.8 6.8 0 0 1-1.69-.64c-.24-.13-.4-.27-.46-.4a1 1 0 0 1-.09-.43v-.76c0-.31.11-.46.33-.46.09 0 .18.01.27.04.09.03.22.09.36.16.49.22 1.02.39 1.58.5.57.11 1.12.17 1.69.17.89 0 1.59-.16 2.08-.47.49-.31.75-.76.75-1.34 0-.39-.13-.72-.38-.98-.25-.26-.73-.49-1.41-.7l-2.03-.63c-1.02-.32-1.78-.79-2.25-1.41-.47-.61-.71-1.29-.71-2.02 0-.58.13-1.09.38-1.53.25-.44.59-.83 1.02-1.14.43-.32.91-.55 1.48-.72a6.4 6.4 0 0 1 1.79-.24c.31 0 .63.02.94.06.32.04.61.1.89.17.27.07.52.15.76.24.24.09.42.18.55.27.18.12.31.24.38.37.07.13.11.3.11.5v.7c0 .31-.12.47-.33.47-.12 0-.31-.06-.56-.18a6.73 6.73 0 0 0-2.82-.57c-.81 0-1.44.13-1.89.41-.45.27-.68.69-.68 1.26 0 .39.14.73.42.99.28.26.8.52 1.54.75l1.99.63c1.01.32 1.74.77 2.18 1.35.44.58.66 1.24.66 1.97 0 .6-.12 1.14-.37 1.61-.25.47-.6.88-1.04 1.22-.44.35-.97.6-1.57.78-.63.2-1.29.29-2 .29z" fill="#FF9900"/>
+        <path d="M44.56 22.52c-4.95 3.65-12.13 5.59-18.32 5.59-8.67 0-16.48-3.2-22.38-8.52-.46-.42-.05-1 .51-.67 6.37 3.71 14.25 5.94 22.38 5.94 5.49 0 11.53-1.14 17.09-3.5.84-.36 1.54.55.72 1.16z" fill="#FF9900"/>
+        <path d="M46.6 20.2c-.64-.81-4.22-.39-5.83-.19-.49.06-.56-.37-.12-.68 2.85-2 7.54-1.43 8.09-.76.55.68-.14 5.38-2.82 7.62-.41.34-.8.16-.62-.29.6-1.52 1.94-4.9 1.3-5.7z" fill="#FF9900"/>
+      </svg>
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-title">Cloud Practitioner · CLF-C02 Prep</div>
+  </div>
+  <div class="navbar-actions">
+    <button class="btn btn-nav" onclick="showPage('study')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Study Mode
+    </button>
+    <button class="btn btn-primary" onclick="startExam()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+      Take Practice Exam
+    </button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <!-- AWS Hero Banner -->
+  <div class="hero-banner">
+    <div class="hero-banner-inner">
+      <div class="hero-cert-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        AWS Certification · CLF-C02
+      </div>
+      <h1>Master the <span>AWS Cloud Practitioner</span> Exam</h1>
+      <p>85+ exam-style questions across all 4 CLF-C02 domains. Full timed mock exams, detailed explanations, and performance tracking — all in your browser.</p>
+      <div class="hero-cta-row">
+        <button class="btn btn-primary" onclick="startExam()" style="padding:10px 24px;font-size:15px;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+          Take Practice Exam
+        </button>
+        <button class="btn btn-nav" onclick="showPage('study')" style="padding:10px 24px;font-size:15px;">Browse Study Mode</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="home">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="stat-attempts">0</div>
+        <div class="label">Exams Attempted</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-best">—</div>
+        <div class="label">Best Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">85</div>
+        <div class="label">Total Questions</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">4</div>
+        <div class="label">Exam Domains</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">70%</div>
+        <div class="label">Passing Score</div>
+      </div>
+    </div>
+
+    <!-- Domains -->
+    <h2 class="section-title">Exam Domains</h2>
+    <div class="domains-grid">
+      <div class="domain-card" style="--domain-color:#FF9900" onclick="studyDomain(0)">
+        <div class="pct">24%</div>
+        <h3>Cloud Concepts</h3>
+        <div class="meta">Value proposition, economy, design principles</div>
+        <div class="progress-bar"><div class="progress-fill" id="dp-0" style="width:0%"></div></div>
+      </div>
+      <div class="domain-card" style="--domain-color:#3B82F6" onclick="studyDomain(1)">
+        <div class="pct">30%</div>
+        <h3>Security &amp; Compliance</h3>
+        <div class="meta">Shared responsibility, IAM, compliance programs</div>
+        <div class="progress-bar"><div class="progress-fill" id="dp-1" style="width:0%"></div></div>
+      </div>
+      <div class="domain-card" style="--domain-color:#22C55E" onclick="studyDomain(2)">
+        <div class="pct">34%</div>
+        <h3>Cloud Technology &amp; Services</h3>
+        <div class="meta">Compute, storage, database, networking</div>
+        <div class="progress-bar"><div class="progress-fill" id="dp-2" style="width:0%"></div></div>
+      </div>
+      <div class="domain-card" style="--domain-color:#A855F7" onclick="studyDomain(3)">
+        <div class="pct">12%</div>
+        <h3>Billing, Pricing &amp; Support</h3>
+        <div class="meta">Pricing models, Cost Explorer, support plans</div>
+        <div class="progress-bar"><div class="progress-fill" id="dp-3" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Modes -->
+    <h2 class="section-title">Study Modes</h2>
+    <div class="modes-grid">
+      <div class="mode-card" onclick="startExam()">
+        <div class="icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h3>Practice Exam</h3>
+        <p>65 questions · 90 minutes · Simulates the real exam format with a timer, question navigation, and full score report.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="event.stopPropagation();startExam()">Start Exam</button>
+      </div>
+      <div class="mode-card" onclick="showPage('study')">
+        <div class="icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <h3>Study Mode</h3>
+        <p>Browse all questions by domain. See answers and detailed explanations immediately without time pressure.</p>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="event.stopPropagation();showPage('study')">Browse Questions</button>
+      </div>
+    </div>
+
+    <!-- Exam info -->
+    <h2 class="section-title">About the Exam</h2>
+    <div class="aws-panel" style="margin-bottom:36px;">
+      <div class="aws-panel-header">AWS Certified Cloud Practitioner (CLF-C02) — Exam Details</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0;border-top:1px solid var(--border);">
+        <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Format</div>
+          <div style="font-weight:700;font-size:14px;color:var(--text-2);">Multiple Choice / Multi-Select</div>
+        </div>
+        <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Questions</div>
+          <div style="font-weight:700;font-size:14px;color:var(--text-2);">65 scored questions</div>
+        </div>
+        <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Duration</div>
+          <div style="font-weight:700;font-size:14px;color:var(--text-2);">90 minutes</div>
+        </div>
+        <div style="padding:18px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Passing Score</div>
+          <div style="font-weight:700;font-size:14px;color:var(--green);">700 / 1000 (70%)</div>
+        </div>
+        <div style="padding:18px 20px;border-right:1px solid var(--border);">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Exam Fee</div>
+          <div style="font-weight:700;font-size:14px;color:var(--text-2);">$100 USD</div>
+        </div>
+        <div style="padding:18px 20px;">
+          <div class="fs-12 text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Validity</div>
+          <div style="font-weight:700;font-size:14px;color:var(--text-2);">3 years</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXAM PAGE -->
+<div id="page-exam" class="page">
+  <div class="exam-page">
+    <div class="exam-header">
+      <button class="btn btn-ghost" onclick="confirmExit()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Exit
+      </button>
+      <div class="exam-progress">
+        <div class="exam-progress-text"><span id="exam-q-num">1</span> of <span id="exam-q-total">65</span> questions &nbsp;·&nbsp; <span id="exam-answered">0</span> answered &nbsp;·&nbsp; <span id="exam-flagged-count">0</span> flagged</div>
+        <div class="progress-bar" style="height:8px;margin-top:6px;">
+          <div class="progress-fill" id="exam-progress-fill" style="width:0%;background:var(--aws)"></div>
+        </div>
+      </div>
+      <div class="timer" id="exam-timer">90:00</div>
+      <button class="btn btn-primary" onclick="submitExam()">Submit Exam</button>
+    </div>
+    <div class="exam-body">
+      <div class="question-nav">
+        <div class="question-nav-header">Question Navigator</div>
+        <div class="question-nav-grid" id="q-nav-grid"></div>
+        <div class="nav-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--surface3)"></div> Not visited</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--aws)"></div> Current</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--surface3);border:1px solid var(--aws)"></div> Answered</div>
+          <div class="legend-item"><div class="legend-dot" style="border:1px solid var(--yellow)"></div> Flagged</div>
+        </div>
+      </div>
+      <div class="question-main" id="question-main">
+        <div class="question-card" id="question-card">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS PAGE -->
+<div id="page-results" class="page">
+  <div class="results-page">
+    <div class="results-hero">
+      <div class="score-circle" id="score-circle">
+        <div class="score-pct" id="score-pct-text">0%</div>
+        <div class="score-label">Score</div>
+      </div>
+      <div class="pass-badge" id="pass-badge">—</div>
+      <p class="text-muted" id="score-subtitle"></p>
+    </div>
+    <div class="results-grid" id="results-grid"></div>
+    <h2 class="section-title">Score by Domain</h2>
+    <div class="domain-results" id="domain-results"></div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px;">
+      <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+      <button class="btn btn-ghost" onclick="startExam()">Retake Exam</button>
+      <button class="btn btn-ghost" onclick="showPage('home')">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW PAGE -->
+<div id="page-review" class="page">
+  <div class="study-page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 style="font-size:20px;font-weight:800;color:var(--text-2);">Review Exam Answers</h1>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="showPage('results')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to Results
+        </button>
+        <button class="btn btn-primary" onclick="startExam()">Retake Exam</button>
+      </div>
+    </div>
+    <div id="review-content"></div>
+  </div>
+</div>
+
+<!-- STUDY PAGE -->
+<div id="page-study" class="page">
+  <div class="study-page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 style="font-size:20px;font-weight:800;color:var(--text-2);">Study Mode — All Domains</h1>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="showPage('home')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Home
+        </button>
+        <button class="btn btn-primary" onclick="startExam()">Take Practice Exam</button>
+      </div>
+    </div>
+    <div class="study-layout">
+      <div class="study-sidebar">
+        <div style="padding:16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-muted)">Filter by Domain</div>
+        <button class="study-domain-btn active" data-domain="-1" onclick="filterStudy(-1,this)">All Domains <span class="tag" id="study-count-all">85</span></button>
+        <button class="study-domain-btn" data-domain="0" onclick="filterStudy(0,this)">Cloud Concepts <span class="tag" id="study-count-0"></span></button>
+        <button class="study-domain-btn" data-domain="1" onclick="filterStudy(1,this)">Security &amp; Compliance <span class="tag" id="study-count-1"></span></button>
+        <button class="study-domain-btn" data-domain="2" onclick="filterStudy(2,this)">Technology &amp; Services <span class="tag" id="study-count-2"></span></button>
+        <button class="study-domain-btn" data-domain="3" onclick="filterStudy(3,this)">Billing &amp; Pricing <span class="tag" id="study-count-3"></span></button>
+      </div>
+      <div class="study-main" id="study-content"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Exit Modal -->
+<div class="modal-overlay" id="exit-modal">
+  <div class="modal">
+    <h2>Exit Exam?</h2>
+    <p>Your progress will be lost. Are you sure you want to exit the exam?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Continue Exam</button>
+      <button class="btn btn-danger" onclick="forceExit()">Exit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Modal -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal">
+    <h2>Submit Exam?</h2>
+    <p id="submit-modal-text">You have answered <strong>0</strong> of 65 questions. Once submitted you cannot change answers.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Go Back</button>
+      <button class="btn btn-success" onclick="finalSubmit()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== QUESTION BANK =====================
+const DOMAINS = [
+  { name: 'Cloud Concepts', color: '#FF9900' },
+  { name: 'Security & Compliance', color: '#3B82F6' },
+  { name: 'Technology & Services', color: '#22C55E' },
+  { name: 'Billing, Pricing & Support', color: '#A855F7' }
+];
+
+const ALL_QUESTIONS = [
+// ---- DOMAIN 0: Cloud Concepts ----
+{d:0,q:"Which of the following best describes the AWS Cloud value proposition?",o:["Lower upfront capital expenditure with pay-as-you-go pricing","Guaranteed 100% uptime SLA for all services","Free unlimited storage and computing","Dedicated hardware for every customer"],a:0,e:"AWS shifts IT spending from capital expenditure (CapEx) to operational expenditure (OpEx) with a pay-as-you-go model, eliminating large upfront investments and allowing you to pay only for what you use."},
+{d:0,q:"What is the primary benefit of the AWS global infrastructure of Regions and Availability Zones?",o:["Reduced AWS pricing globally","Faster internet speeds","High availability and fault tolerance","Automatic application scaling"],a:2,e:"AWS Regions and Availability Zones enable customers to deploy applications with high availability and fault tolerance. Multiple AZs within a Region allow you to design resilient architectures that survive failures."},
+{d:0,q:"Which cloud deployment model gives a company FULL control over its infrastructure while still using cloud-like technology?",o:["Public cloud","Private cloud","Hybrid cloud","Multi-cloud"],a:1,e:"A private cloud is hosted on-premises or in a dedicated environment, giving the company full control over hardware and software while using virtualization and cloud-management technologies."},
+{d:0,q:"Which AWS design principle recommends treating servers as interchangeable and disposable rather than unique long-lived resources?",o:["Design for failure","Elasticity","Treat infrastructure as code","Design for cattle, not pets"],a:3,e:"The 'cattle not pets' design principle means servers are interchangeable and can be replaced automatically. This enables auto-scaling and self-healing architectures on AWS."},
+{d:0,q:"Which of the following is an advantage of cloud computing over traditional on-premises infrastructure? (Choose TWO)",o:["Trade capital expense for variable expense","Benefit from massive economies of scale","You maintain all physical hardware","Fixed monthly pricing regardless of usage"],a:[0,1],e:"Cloud computing advantages include trading CapEx for OpEx (pay-as-you-go) and benefiting from economies of scale because AWS aggregates millions of customers, passing those savings along."},
+{d:0,q:"What does 'elasticity' mean in the context of AWS Cloud?",o:["The ability to automatically scale resources up or down based on demand","The physical flexibility of data center racks","Guaranteed performance regardless of load","Automatic data replication across regions"],a:0,e:"Elasticity in AWS refers to the ability to automatically provision and de-provision resources in response to changing demand, ensuring you only pay for what you need."},
+{d:0,q:"Which AWS concept describes the ability to acquire resources as needed and release them when no longer required?",o:["High availability","Agility","On-demand self-service","Fault tolerance"],a:2,e:"On-demand self-service means users can provision computing resources automatically without requiring human interaction with each service provider, a core characteristic of cloud computing."},
+{d:0,q:"A company wants to move its application to AWS and only be responsible for the application code, not the underlying OS or hardware. Which cloud service model is MOST appropriate?",o:["IaaS","PaaS","SaaS","On-premises"],a:1,e:"Platform as a Service (PaaS) abstracts the infrastructure and OS, letting developers focus solely on application code. AWS Elastic Beanstalk is an example of PaaS on AWS."},
+{d:0,q:"Which of the following is a key characteristic of the AWS Cloud that allows companies to innovate faster?",o:["Fixed pricing for all services","Ability to experiment with low cost and risk","Dedicated hardware for each customer","Manual scaling of infrastructure"],a:1,e:"AWS allows companies to experiment rapidly at low cost. You can spin up new environments, test ideas, and shut them down without large upfront investments, accelerating innovation."},
+{d:0,q:"What is an AWS Availability Zone?",o:["A geographic region where AWS has a data center","One or more discrete data centers with redundant power and networking within a Region","A global content delivery network point of presence","A separate AWS account for high availability"],a:1,e:"An Availability Zone (AZ) is one or more physically separate data centers within an AWS Region, each with independent power, cooling, and networking, to provide fault isolation."},
+{d:0,q:"Which term describes the ability of an application to continue operating even when some components fail?",o:["Scalability","Fault tolerance","Elasticity","Agility"],a:1,e:"Fault tolerance means a system can continue operating properly in the event of failure of one or more components. This is achieved in AWS through redundancy across multiple AZs."},
+{d:0,q:"Which AWS service is a global content delivery network (CDN) that reduces latency?",o:["Amazon Route 53","AWS Direct Connect","Amazon CloudFront","AWS Global Accelerator"],a:2,e:"Amazon CloudFront is AWS's CDN that caches content at edge locations worldwide, reducing latency by serving content from locations geographically close to end users."},
+{d:0,q:"What is the benefit of 'Stop guessing capacity' in cloud computing?",o:["AWS automatically manages all application logic","You no longer need to predict traffic and over/under-provision hardware","All AWS services are unlimited capacity","AWS charges only for predicted capacity"],a:1,e:"With AWS, you can scale up or down as needed without pre-purchasing capacity. This eliminates the need to guess peak demand and avoid over-provisioning or under-provisioning."},
+{d:0,q:"Which of the following describes the concept of 'going global in minutes' on AWS?",o:["AWS ships physical servers worldwide in minutes","You can deploy applications in multiple AWS Regions quickly using the global infrastructure","AWS provides global internet connectivity","AWS offers 1-minute SLAs globally"],a:1,e:"AWS's global infrastructure of Regions lets you deploy your application to multiple geographies around the world with just a few clicks, providing lower latency and better user experience globally."},
+{d:0,q:"Which cloud computing model does AWS primarily provide?",o:["SaaS only","IaaS, PaaS, and SaaS","On-premises managed services","PaaS only"],a:1,e:"AWS provides all three service models: IaaS (like EC2 for compute), PaaS (like Elastic Beanstalk), and SaaS (like AWS Chime for communication)."},
+// ---- DOMAIN 1: Security & Compliance ----
+{d:1,q:"According to the AWS Shared Responsibility Model, which of the following is the customer's responsibility?",o:["Physical security of data centers","Patching the hypervisor","Managing IAM users and permissions","Hardware maintenance"],a:2,e:"Under the shared responsibility model, AWS manages security 'of' the cloud (hardware, network, hypervisor), while customers manage security 'in' the cloud — including IAM users, permissions, and data."},
+{d:1,q:"What does the AWS Shared Responsibility Model state about data encryption?",o:["AWS encrypts all customer data automatically","Data encryption is always the customer's responsibility","Both AWS and the customer share responsibility for encryption depending on the service","AWS does not support data encryption"],a:2,e:"Encryption responsibilities are shared. AWS provides encryption tools and services (KMS, S3 SSE), but customers choose whether and how to use encryption for their data."},
+{d:1,q:"Which AWS service allows you to centrally manage user access and permissions across AWS accounts?",o:["Amazon Cognito","AWS IAM","AWS Config","AWS Organizations"],a:1,e:"AWS Identity and Access Management (IAM) enables you to control who can access which AWS services and resources. You create users, groups, and roles with specific policies."},
+{d:1,q:"What is the principle of least privilege in AWS?",o:["Give users admin access by default and restrict later","Grant only the minimum permissions needed to perform a task","Share credentials between team members","Use root account for daily operations"],a:1,e:"The principle of least privilege means granting users and services only the minimum permissions they need to perform their job functions, reducing the blast radius of compromised credentials."},
+{d:1,q:"Which AWS service detects and protects against DDoS attacks?",o:["AWS WAF","AWS Shield","Amazon GuardDuty","AWS Firewall Manager"],a:1,e:"AWS Shield is a managed DDoS protection service. Shield Standard is free and automatic for all AWS customers. Shield Advanced provides enhanced protection for specific resources."},
+{d:1,q:"A company needs to identify potential security threats and malicious activity in their AWS environment. Which service should they use?",o:["AWS CloudTrail","AWS Config","Amazon GuardDuty","AWS Trusted Advisor"],a:2,e:"Amazon GuardDuty is a threat detection service that continuously monitors for malicious activity and unauthorized behavior using machine learning, anomaly detection, and threat intelligence."},
+{d:1,q:"Which service provides a hardware security module (HSM) for storing cryptographic keys in AWS?",o:["AWS KMS","AWS CloudHSM","AWS Secrets Manager","AWS Certificate Manager"],a:1,e:"AWS CloudHSM is a dedicated hardware security module that lets you generate and use your own encryption keys on AWS, meeting strict cryptographic compliance requirements."},
+{d:1,q:"What AWS service helps ensure your AWS resources comply with company policies and industry regulations?",o:["AWS Inspector","AWS Config","AWS Trusted Advisor","Amazon Detective"],a:1,e:"AWS Config records and evaluates configurations of your AWS resources against desired configurations (rules), helping you audit compliance and track configuration changes over time."},
+{d:1,q:"Which of the following is a best practice for the AWS root account?",o:["Use the root account for daily administrative tasks","Share root credentials with the team","Enable MFA and avoid using it for routine tasks","Delete the root account after initial setup"],a:2,e:"AWS best practices strongly recommend enabling MFA on the root account and using it only for tasks that absolutely require root access, such as account settings changes. Use IAM users for daily operations."},
+{d:1,q:"Which compliance program helps AWS customers understand how AWS maintains data privacy in accordance with EU law?",o:["SOC 2","PCI DSS","GDPR","ISO 27001"],a:2,e:"The General Data Protection Regulation (GDPR) is an EU privacy law. AWS has aligned its services and contractual commitments with GDPR requirements to help customers maintain compliance."},
+{d:1,q:"What is the purpose of AWS CloudTrail?",o:["Monitor application performance metrics","Record API calls and user activity across AWS accounts","Detect network intrusions","Manage firewall rules"],a:1,e:"AWS CloudTrail records API calls made to AWS services, providing an audit trail of user activity. This is essential for security analysis, compliance auditing, and troubleshooting."},
+{d:1,q:"Which IAM feature allows you to define permissions once and attach them to multiple users, groups, or roles?",o:["IAM Access Analyzer","IAM Policy","IAM Role","IAM Credential Report"],a:1,e:"IAM Policies are JSON documents that define permissions. You can attach a single policy to multiple IAM entities (users, groups, roles), making permission management scalable."},
+{d:1,q:"A company wants to ensure its web application is protected against SQL injection and cross-site scripting. Which AWS service should they use?",o:["AWS Shield","Amazon Inspector","AWS WAF","AWS Network Firewall"],a:2,e:"AWS Web Application Firewall (WAF) filters web traffic and protects applications from common exploits like SQL injection, cross-site scripting (XSS), and other OWASP Top 10 vulnerabilities."},
+{d:1,q:"Which AWS service provides automated security assessments for EC2 instances and container images?",o:["AWS Config","Amazon GuardDuty","Amazon Inspector","AWS Trusted Advisor"],a:2,e:"Amazon Inspector automatically discovers workloads (EC2 instances, container images in ECR) and scans them for software vulnerabilities and unintended network exposure."},
+{d:1,q:"What is an IAM role?",o:["A permanent set of credentials tied to a specific user","An AWS identity with permission policies that can be assumed by trusted entities","A type of IAM group for administrators","A policy that denies all access by default"],a:1,e:"An IAM role is an identity with permission policies that can be assumed by AWS services (like EC2 or Lambda), users, or accounts. Roles use temporary credentials rather than permanent access keys."},
+{d:1,q:"Which service helps protect sensitive data by automatically discovering, classifying, and protecting it in Amazon S3?",o:["AWS Secrets Manager","Amazon Macie","AWS Security Hub","AWS Key Management Service"],a:1,e:"Amazon Macie uses machine learning to automatically discover and protect sensitive data (like PII and financial data) stored in Amazon S3, providing visibility into security risks."},
+{d:1,q:"What does AWS Security Hub do?",o:["Provides DDoS protection","Gives a centralized view of security alerts and compliance status across AWS accounts","Manages IAM users and roles","Encrypts data at rest"],a:1,e:"AWS Security Hub aggregates, organizes, and prioritizes security alerts from multiple AWS services (GuardDuty, Inspector, Macie) and partner solutions into a single consolidated view."},
+// ---- DOMAIN 2: Technology & Services ----
+{d:2,q:"Which AWS service provides scalable virtual servers in the cloud?",o:["AWS Lambda","Amazon EC2","Amazon ECS","AWS Fargate"],a:1,e:"Amazon Elastic Compute Cloud (EC2) provides resizable virtual servers (instances) in the cloud, giving you full control over the operating system and computing environment."},
+{d:2,q:"A company wants to run code without managing servers. Which AWS service is MOST appropriate?",o:["Amazon EC2","AWS Elastic Beanstalk","AWS Lambda","Amazon ECS"],a:2,e:"AWS Lambda is a serverless compute service that runs your code in response to events without requiring you to provision or manage servers. You pay only for the compute time you consume."},
+{d:2,q:"Which Amazon S3 storage class is designed for data that is rarely accessed and offers the lowest storage cost?",o:["S3 Standard","S3 Standard-IA","S3 Glacier Deep Archive","S3 Intelligent-Tiering"],a:2,e:"Amazon S3 Glacier Deep Archive is the lowest-cost storage class, designed for long-term data archiving that is rarely accessed. Retrieval times range from 12-48 hours."},
+{d:2,q:"Which AWS database service is a fully managed relational database compatible with MySQL and PostgreSQL?",o:["Amazon DynamoDB","Amazon Redshift","Amazon Aurora","Amazon ElastiCache"],a:2,e:"Amazon Aurora is a fully managed relational database engine that's compatible with MySQL and PostgreSQL, offering up to 5x the throughput of standard MySQL at a lower cost."},
+{d:2,q:"Which AWS service is a fully managed NoSQL key-value and document database?",o:["Amazon RDS","Amazon Aurora","Amazon Redshift","Amazon DynamoDB"],a:3,e:"Amazon DynamoDB is a fully managed, serverless NoSQL key-value and document database that delivers single-digit millisecond performance at any scale."},
+{d:2,q:"What is the purpose of Amazon VPC?",o:["A CDN for caching web content","A logically isolated section of AWS cloud to launch resources in a defined virtual network","A managed DNS service","A database migration service"],a:1,e:"Amazon Virtual Private Cloud (VPC) lets you provision a logically isolated section of AWS, where you can define your own IP ranges, subnets, route tables, and network gateways."},
+{d:2,q:"Which AWS service provides managed Kubernetes?",o:["Amazon ECS","AWS Fargate","Amazon EKS","AWS Lambda"],a:2,e:"Amazon Elastic Kubernetes Service (EKS) is a fully managed Kubernetes service that makes it easy to run Kubernetes on AWS without needing to install and manage the Kubernetes control plane."},
+{d:2,q:"Which service would you use to move petabytes of data to AWS when network transfer is too slow?",o:["AWS DataSync","AWS Snowball","AWS Direct Connect","AWS Storage Gateway"],a:1,e:"AWS Snowball is a physical data transport device that transfers large amounts of data (petabytes) to and from AWS. It is ideal when network bandwidth is a constraint for data migration."},
+{d:2,q:"Which Amazon service provides a managed message queue for decoupling microservices?",o:["Amazon SNS","Amazon SQS","Amazon Kinesis","AWS EventBridge"],a:1,e:"Amazon Simple Queue Service (SQS) is a fully managed message queuing service that enables you to decouple and scale microservices, distributed systems, and serverless applications."},
+{d:2,q:"Which service is used to send notifications to a large number of subscribers simultaneously?",o:["Amazon SQS","AWS Step Functions","Amazon SNS","AWS EventBridge"],a:2,e:"Amazon Simple Notification Service (SNS) is a fully managed pub/sub messaging service that enables you to send notifications to many subscribers via email, SMS, HTTP, SQS, and Lambda."},
+{d:2,q:"What is Amazon CloudWatch primarily used for?",o:["Storing objects at scale","Monitoring and observability for AWS resources and applications","Managing DNS records","Distributing traffic across EC2 instances"],a:1,e:"Amazon CloudWatch is a monitoring service that collects metrics, logs, and events from AWS resources and applications, enabling you to visualize data, set alarms, and take automated actions."},
+{d:2,q:"Which AWS service automatically distributes incoming traffic across multiple targets (EC2, containers, IP addresses)?",o:["Amazon CloudFront","AWS Global Accelerator","Elastic Load Balancing","Amazon Route 53"],a:2,e:"Elastic Load Balancing (ELB) automatically distributes incoming application traffic across multiple targets such as EC2 instances, containers, and IP addresses, improving availability and fault tolerance."},
+{d:2,q:"Which service enables you to run containers without managing the underlying EC2 infrastructure?",o:["Amazon EKS","Amazon ECS","AWS Fargate","AWS Lambda"],a:2,e:"AWS Fargate is a serverless compute engine for containers that works with ECS and EKS. It eliminates the need to provision and manage EC2 instances for your container workloads."},
+{d:2,q:"Which AWS service is a managed data warehouse for analytics?",o:["Amazon RDS","Amazon DynamoDB","Amazon Redshift","Amazon EMR"],a:2,e:"Amazon Redshift is a fully managed, petabyte-scale data warehouse service that makes it simple and cost-effective to analyze all your data using standard SQL and existing BI tools."},
+{d:2,q:"What is AWS Elastic Beanstalk?",o:["A container orchestration service","A PaaS service that automatically handles deployment, scaling, and monitoring of web applications","A serverless function service","A managed Kubernetes service"],a:1,e:"AWS Elastic Beanstalk is a PaaS offering that simplifies deploying and managing web applications. You upload code, and Beanstalk handles provisioning, load balancing, scaling, and health monitoring."},
+{d:2,q:"Which service provides private connectivity between your data center and AWS without using the public internet?",o:["AWS VPN","Amazon Route 53","AWS Direct Connect","AWS Transit Gateway"],a:2,e:"AWS Direct Connect provides a dedicated private network connection from your data center to AWS, offering more consistent network performance and reduced bandwidth costs compared to internet-based connections."},
+{d:2,q:"Which Amazon S3 feature ensures objects are stored across multiple geographic locations?",o:["S3 versioning","S3 Cross-Region Replication","S3 Lifecycle policies","S3 Transfer Acceleration"],a:1,e:"S3 Cross-Region Replication (CRR) automatically replicates objects to a different AWS Region, supporting compliance requirements, disaster recovery, and lower latency for global users."},
+{d:2,q:"Which AWS service is used to provision infrastructure as code using templates?",o:["AWS OpsWorks","AWS CloudFormation","AWS Systems Manager","AWS Config"],a:1,e:"AWS CloudFormation allows you to model and provision AWS resources using templates (JSON or YAML), enabling infrastructure as code (IaC) for repeatable and consistent deployments."},
+{d:2,q:"Which AWS service provides managed caching to improve database performance?",o:["Amazon RDS","Amazon DynamoDB Accelerator (DAX)","Amazon ElastiCache","Amazon Redshift"],a:2,e:"Amazon ElastiCache is a fully managed in-memory caching service compatible with Redis and Memcached, used to improve the performance of web applications by caching database query results."},
+{d:2,q:"Which service helps you migrate existing databases to AWS with minimal downtime?",o:["AWS DataSync","AWS Snowball","AWS Database Migration Service (DMS)","AWS Schema Conversion Tool"],a:2,e:"AWS Database Migration Service (DMS) helps migrate databases to AWS quickly with minimal downtime. The source database remains operational during migration, reducing impact on operations."},
+{d:2,q:"Which AWS service provides global DNS and domain registration?",o:["Amazon CloudFront","AWS Global Accelerator","Amazon Route 53","AWS Direct Connect"],a:2,e:"Amazon Route 53 is a highly available and scalable DNS web service that also provides domain registration and health checking to route traffic to healthy endpoints."},
+{d:2,q:"Which feature of Amazon EC2 allows you to reserve capacity at a significant discount in exchange for a commitment?",o:["On-Demand Instances","Spot Instances","Reserved Instances","Dedicated Hosts"],a:2,e:"Reserved Instances allow you to commit to using a specific instance type in a Region for 1 or 3 years in exchange for up to 72% discount compared to On-Demand pricing."},
+{d:2,q:"Which AWS service provides a virtual desktop solution?",o:["Amazon AppStream 2.0","Amazon WorkSpaces","AWS Fargate","Amazon Lightsail"],a:1,e:"Amazon WorkSpaces is a fully managed Desktop-as-a-Service (DaaS) solution that provides cloud-based virtual desktops, allowing users to access their desktop from any device."},
+{d:2,q:"Which AWS service is best for real-time data streaming and processing?",o:["Amazon SQS","Amazon SNS","Amazon Kinesis","AWS Batch"],a:2,e:"Amazon Kinesis makes it easy to collect, process, and analyze real-time streaming data such as application logs, IoT telemetry, clickstream data, and video streams."},
+{d:2,q:"Which AWS service helps teams build, train, and deploy machine learning models at scale?",o:["AWS Rekognition","Amazon Comprehend","Amazon SageMaker","AWS Deep Learning AMIs"],a:2,e:"Amazon SageMaker is a fully managed ML platform that provides tools for every step of the ML workflow — from data labeling to model training, tuning, and deployment."},
+{d:2,q:"Which service allows you to remotely access and manage EC2 instances without SSH or RDP?",o:["AWS CloudShell","AWS Systems Manager Session Manager","EC2 Instance Connect","AWS Cloud9"],a:1,e:"AWS Systems Manager Session Manager provides secure browser-based and CLI shell access to EC2 instances without opening inbound ports or managing SSH keys."},
+{d:2,q:"Which storage service provides a shared file system that can be accessed concurrently from multiple EC2 instances?",o:["Amazon S3","Amazon EBS","Amazon EFS","AWS Storage Gateway"],a:2,e:"Amazon Elastic File System (EFS) provides a scalable, managed NFS file system that can be mounted concurrently from many EC2 instances across multiple AZs within a Region."},
+// ---- DOMAIN 3: Billing, Pricing & Support ----
+{d:3,q:"Which AWS pricing model charges you only for the resources you consume with no long-term commitment?",o:["Reserved Instances","Spot Instances","On-Demand","Savings Plans"],a:2,e:"On-Demand pricing charges you by the hour or second for compute capacity with no upfront payment or long-term commitment, ideal for variable workloads or testing."},
+{d:3,q:"Which tool helps you estimate the cost of AWS services before you deploy them?",o:["AWS Cost Explorer","AWS Budgets","AWS Pricing Calculator","AWS Trusted Advisor"],a:2,e:"The AWS Pricing Calculator (formerly Simple Monthly Calculator) helps you estimate the monthly cost of AWS services based on your expected usage before you commit to anything."},
+{d:3,q:"Which AWS Support plan provides access to a Technical Account Manager (TAM)?",o:["Basic","Developer","Business","Enterprise"],a:3,e:"The Enterprise Support plan includes a dedicated Technical Account Manager (TAM) who provides proactive guidance, architecture reviews, and advocates for your needs within AWS."},
+{d:3,q:"Which AWS service provides recommendations to help you reduce costs, improve performance, and enhance security?",o:["AWS Config","AWS Cost Explorer","AWS Trusted Advisor","Amazon Inspector"],a:2,e:"AWS Trusted Advisor is an online tool that analyzes your AWS environment and provides recommendations across five categories: cost optimization, performance, security, fault tolerance, and service limits."},
+{d:3,q:"Which AWS pricing model offers the greatest discount for EC2 instances in exchange for using spare capacity?",o:["On-Demand Instances","Reserved Instances","Spot Instances","Dedicated Instances"],a:2,e:"Spot Instances allow you to use spare AWS EC2 capacity at up to 90% discount compared to On-Demand prices. The trade-off is that instances can be interrupted with 2 minutes' notice."},
+{d:3,q:"Which tool allows you to set custom cost and usage thresholds and receive alerts when they are breached?",o:["AWS Cost Explorer","AWS Budgets","AWS Pricing Calculator","AWS Cost and Usage Report"],a:1,e:"AWS Budgets allows you to set custom cost, usage, and reservation budgets. When your actual or forecasted usage exceeds your thresholds, you receive automated alerts via email or SNS."},
+{d:3,q:"Which AWS service provides the most detailed billing data, including service-level usage and cost data?",o:["AWS Cost Explorer","AWS Budgets","AWS Cost and Usage Report (CUR)","AWS Trusted Advisor"],a:2,e:"The AWS Cost and Usage Report (CUR) provides the most comprehensive set of AWS cost and usage data, including line items for each service category, usage type, and resource tag."},
+{d:3,q:"What is the AWS Free Tier?",o:["A permanent free offering for all AWS services","A time-limited offer providing free usage of specific AWS services for new customers","A discount program for non-profit organizations","Free support for Basic plan customers"],a:1,e:"The AWS Free Tier allows new AWS customers to explore and use AWS services free of charge, within limits, for the first 12 months after sign-up, plus some services that are always free."},
+{d:3,q:"Which EC2 purchasing option provides up to 72% discount over On-Demand in exchange for a 1 or 3 year commitment?",o:["Spot Instances","Dedicated Hosts","Reserved Instances","Savings Plans"],a:2,e:"EC2 Reserved Instances provide significant discounts (up to 72%) over On-Demand prices in exchange for a commitment to a consistent instance type in a specific region for 1 or 3 years."},
+{d:3,q:"Which AWS feature allows you to group and allocate costs by application, team, or environment?",o:["AWS Cost Explorer","AWS Organizations","Cost Allocation Tags","AWS Budgets"],a:2,e:"Cost Allocation Tags let you assign metadata (key-value pairs) to AWS resources. AWS uses these tags to organize billing data, so you can see costs broken down by project, team, or environment."},
+{d:3,q:"Which AWS Support plan is the minimum required to get 24/7 phone and chat access to Cloud Support Engineers?",o:["Basic","Developer","Business","Enterprise"],a:2,e:"The Business Support plan provides 24/7 phone, chat, and email access to Cloud Support Engineers, along with Trusted Advisor full checks, AWS Support API, and infrastructure event management."},
+{d:3,q:"Which AWS service or feature helps you centrally manage billing and access for multiple AWS accounts?",o:["IAM","AWS Config","AWS Organizations","AWS Control Tower"],a:2,e:"AWS Organizations lets you centrally manage multiple AWS accounts, apply Service Control Policies (SCPs), and consolidate billing so you get a single bill for all accounts with volume discounts."},
+{d:3,q:"What is the benefit of consolidated billing in AWS Organizations?",o:["All accounts share the same IAM users","You get one bill for all accounts and may receive volume pricing discounts","Accounts cannot be created independently","All accounts must use the same region"],a:1,e:"Consolidated billing combines usage from all member accounts, which can push your total usage into higher discount tiers for services like S3, EC2, and data transfer, resulting in lower overall costs."},
+{d:3,q:"Which EC2 pricing model is best for workloads with steady-state or predictable usage that run continuously for 1-3 years?",o:["On-Demand","Spot Instances","Reserved Instances","Dedicated Hosts"],a:2,e:"Reserved Instances are ideal for predictable, steady-state workloads. The 1 or 3 year commitment provides the largest discount (up to 72%) compared to On-Demand for consistent usage."},
+{d:3,q:"What AWS tool allows you to visualize, understand, and manage your AWS costs and usage over time?",o:["AWS Budgets","AWS Pricing Calculator","AWS Cost Explorer","AWS Cost and Usage Report"],a:2,e:"AWS Cost Explorer provides an interactive UI to visualize your cost and usage data, analyze trends, identify cost drivers, and forecast future spending using historical usage patterns."},
+{d:3,q:"Which AWS Support plan includes access to Infrastructure Event Management (IEM) for an additional fee?",o:["Basic","Developer","Business","Enterprise"],a:2,e:"Business Support includes Infrastructure Event Management (IEM) for an additional fee. Enterprise Support includes IEM at no extra charge for planned large events like product launches."},
+{d:3,q:"What is an AWS Savings Plan?",o:["A plan where AWS saves your data for 1 year","A flexible pricing model offering lower prices in exchange for a commitment to a consistent amount of usage ($/hour) for 1 or 3 years","A free tier extension program","A support plan for cost savings recommendations"],a:1,e:"Savings Plans are a flexible pricing model that offer lower prices (up to 66%) compared to On-Demand in exchange for committing to a specific amount of compute usage (measured in $/hour) for 1 or 3 years."},
+];
+
+// ===================== STATE =====================
+let state = {
+  mode: 'home',
+  examQuestions: [],
+  currentQ: 0,
+  answers: {},
+  flags: new Set(),
+  timerInterval: null,
+  timeLeft: 90 * 60,
+  examSubmitted: false,
+  studyDomain: -1,
+  history: JSON.parse(localStorage.getItem('aws_history') || '[]'),
+};
+
+// ===================== HELPERS =====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  state.mode = name;
+  if (name === 'home') updateHomeStats();
+  if (name === 'study') renderStudy();
+}
+
+
+// ===================== HOME =====================
+function updateHomeStats() {
+  const h = state.history;
+  document.getElementById('stat-attempts').textContent = h.length;
+  if (h.length > 0) {
+    const best = Math.max(...h.map(x => x.score));
+    document.getElementById('stat-best').textContent = best + '%';
+  }
+  // domain progress from history
+  if (h.length > 0) {
+    const last = h[h.length - 1];
+    if (last.domainScores) {
+      last.domainScores.forEach((s, i) => {
+        const el = document.getElementById('dp-' + i);
+        if (el) el.style.width = s + '%';
+      });
+    }
+  }
+  // update study counts
+  DOMAINS.forEach((_, i) => {
+    const el = document.getElementById('study-count-' + i);
+    if (el) el.textContent = ALL_QUESTIONS.filter(q => q.d === i).length;
+  });
+}
+
+function studyDomain(d) {
+  state.studyDomain = d;
+  showPage('study');
+}
+
+// ===================== EXAM =====================
+function startExam() {
+  clearInterval(state.timerInterval);
+  // Select 65 questions, weighted by domain percentage
+  const domainCounts = [16, 20, 22, 7]; // ~65 total, proportional to 24/30/34/12
+  let examQs = [];
+  DOMAINS.forEach((_, di) => {
+    const pool = shuffle(ALL_QUESTIONS.filter(q => q.d === di));
+    examQs = examQs.concat(pool.slice(0, domainCounts[di]));
+  });
+  state.examQuestions = shuffle(examQs);
+  state.currentQ = 0;
+  state.answers = {};
+  state.flags = new Set();
+  state.timeLeft = 90 * 60;
+  state.examSubmitted = false;
+
+  showPage('exam');
+  renderNav();
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  const el = document.getElementById('exam-timer');
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    const m = Math.floor(state.timeLeft / 60);
+    const s = state.timeLeft % 60;
+    el.textContent = m + ':' + String(s).padStart(2, '0');
+    el.className = 'timer';
+    if (state.timeLeft <= 300) el.classList.add('warning');
+    if (state.timeLeft <= 60) { el.classList.remove('warning'); el.classList.add('danger'); }
+    if (state.timeLeft <= 0) { clearInterval(state.timerInterval); finalSubmit(); }
+  }, 1000);
+}
+
+function renderNav() {
+  const grid = document.getElementById('q-nav-grid');
+  grid.innerHTML = '';
+  state.examQuestions.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'q-dot' + (i === state.currentQ ? ' current' : '') + (state.answers[i] !== undefined ? ' answered' : '') + (state.flags.has(i) ? ' flagged' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { state.currentQ = i; renderQuestion(); renderNav(); };
+    dot.setAttribute('aria-label', 'Question ' + (i+1));
+    grid.appendChild(dot);
+  });
+  // Update header stats
+  document.getElementById('exam-q-num').textContent = state.currentQ + 1;
+  document.getElementById('exam-q-total').textContent = state.examQuestions.length;
+  document.getElementById('exam-answered').textContent = Object.keys(state.answers).length;
+  document.getElementById('exam-flagged-count').textContent = state.flags.size;
+  const pct = (Object.keys(state.answers).length / state.examQuestions.length) * 100;
+  document.getElementById('exam-progress-fill').style.width = pct + '%';
+}
+
+function renderQuestion() {
+  const q = state.examQuestions[state.currentQ];
+  const answered = state.answers[state.currentQ];
+  const flagged = state.flags.has(state.currentQ);
+  const letters = ['A','B','C','D','E'];
+
+  document.getElementById('question-card').innerHTML = `
+    <div class="question-meta">
+      <span class="question-domain">${DOMAINS[q.d].name}</span>
+      <button class="flag-btn ${flagged ? 'flagged' : ''}" onclick="toggleFlag()" aria-label="Flag for review">
+        <svg width="14" height="14" fill="${flagged ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        ${flagged ? 'Flagged' : 'Flag'}
+      </button>
+    </div>
+    <p class="question-text">Q${state.currentQ + 1}. ${q.q}</p>
+    <div class="options">
+      ${q.o.map((opt, i) => `
+        <div class="option ${answered === i ? 'selected' : ''}" onclick="selectAnswer(${i})" role="button" tabindex="0" aria-label="Option ${letters[i]}">
+          <div class="option-letter">${letters[i]}</div>
+          <div class="option-text">${opt}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="question-footer">
+      <button class="btn btn-ghost" onclick="goQuestion(-1)" ${state.currentQ === 0 ? 'disabled style="opacity:0.4"' : ''}>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Previous
+      </button>
+      <span class="text-muted fs-13">${state.currentQ + 1} / ${state.examQuestions.length}</span>
+      ${state.currentQ < state.examQuestions.length - 1
+        ? `<button class="btn btn-primary" onclick="goQuestion(1)">Next <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>`
+        : `<button class="btn btn-success" onclick="submitExam()">Finish Exam</button>`
+      }
+    </div>
+  `;
+}
+
+function selectAnswer(idx) {
+  if (state.examSubmitted) return;
+  state.answers[state.currentQ] = idx;
+  renderQuestion();
+  renderNav();
+}
+
+function toggleFlag() {
+  if (state.flags.has(state.currentQ)) state.flags.delete(state.currentQ);
+  else state.flags.add(state.currentQ);
+  renderQuestion();
+  renderNav();
+}
+
+function goQuestion(dir) {
+  state.currentQ = Math.max(0, Math.min(state.examQuestions.length - 1, state.currentQ + dir));
+  renderQuestion();
+  renderNav();
+}
+
+function submitExam() {
+  const answered = Object.keys(state.answers).length;
+  document.getElementById('submit-modal-text').innerHTML = `You have answered <strong>${answered}</strong> of ${state.examQuestions.length} questions. ${answered < state.examQuestions.length ? '<br><br><strong>Note:</strong> Unanswered questions will be marked incorrect.' : ''} Once submitted you cannot change answers.`;
+  document.getElementById('submit-modal').classList.add('show');
+}
+
+function finalSubmit() {
+  closeModal();
+  clearInterval(state.timerInterval);
+  state.examSubmitted = true;
+
+  // Calculate score
+  let correct = 0;
+  const domainCorrect = [0,0,0,0];
+  const domainTotal = [0,0,0,0];
+
+  state.examQuestions.forEach((q, i) => {
+    domainTotal[q.d]++;
+    if (state.answers[i] === q.a) { correct++; domainCorrect[q.d]++; }
+  });
+
+  const total = state.examQuestions.length;
+  const pct = Math.round((correct / total) * 100);
+  const passed = pct >= 70;
+  const domainScores = DOMAINS.map((_, i) => domainTotal[i] > 0 ? Math.round((domainCorrect[i] / domainTotal[i]) * 100) : 0);
+
+  // Save to history
+  const elapsed = 90 * 60 - state.timeLeft;
+  state.history.push({ score: pct, passed, correct, total, domainScores, date: new Date().toISOString(), elapsed });
+  localStorage.setItem('aws_history', JSON.stringify(state.history));
+
+  // Render results
+  renderResults(pct, passed, correct, total, domainCorrect, domainTotal, elapsed);
+  showPage('results');
+}
+
+function renderResults(pct, passed, correct, total, domainCorrect, domainTotal, elapsed) {
+  document.getElementById('score-pct-text').textContent = pct + '%';
+  const sc = document.getElementById('score-circle');
+  sc.style.borderColor = passed ? 'var(--green)' : 'var(--red)';
+  sc.querySelector('.score-pct').style.color = passed ? 'var(--green)' : 'var(--red)';
+
+  const badge = document.getElementById('pass-badge');
+  badge.className = 'pass-badge ' + (passed ? 'pass' : 'fail');
+  badge.innerHTML = passed
+    ? `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> PASSED`
+    : `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> DID NOT PASS`;
+
+  document.getElementById('score-subtitle').textContent = passed
+    ? `Congratulations! You passed with ${pct}%. The passing score is 70%.`
+    : `You scored ${pct}%. The passing score is 70%. Keep studying and try again!`;
+
+  const m = Math.floor(elapsed / 60), s = elapsed % 60;
+  document.getElementById('results-grid').innerHTML = `
+    <div class="result-stat"><div class="val text-green">${correct}</div><div class="lbl">Correct</div></div>
+    <div class="result-stat"><div class="val text-red">${total - correct}</div><div class="lbl">Incorrect</div></div>
+    <div class="result-stat"><div class="val">${total}</div><div class="lbl">Total Questions</div></div>
+    <div class="result-stat"><div class="val">${m}:${String(s).padStart(2,'0')}</div><div class="lbl">Time Taken</div></div>
+  `;
+
+  const domColors = ['#FF9900','#3B82F6','#22C55E','#A855F7'];
+  document.getElementById('domain-results').innerHTML = DOMAINS.map((d, i) => {
+    const s = domainTotal[i] > 0 ? Math.round((domainCorrect[i] / domainTotal[i]) * 100) : 0;
+    return `
+      <div class="domain-result-row">
+        <div class="top">
+          <h4>${d.name}</h4>
+          <span class="pct-text" style="color:${domColors[i]}">${s}%</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">${domainCorrect[i]} / ${domainTotal[i]} correct</div>
+        <div class="progress-bar" style="height:8px;">
+          <div class="progress-fill" style="width:${s}%;background:${domColors[i]}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function reviewExam() {
+  const letters = ['A','B','C','D','E'];
+  let html = '';
+  state.examQuestions.forEach((q, i) => {
+    const userAns = state.answers[i];
+    const correct = q.a;
+    const isCorrect = userAns === correct;
+    html += `
+      <div class="study-q-card" style="border-left:4px solid ${isCorrect ? 'var(--green)' : 'var(--red)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span class="study-q-num">Question ${i+1} · ${DOMAINS[q.d].name}</span>
+          <span class="chip ${isCorrect ? 'chip-green' : 'chip-red'}">${isCorrect ? '✓ Correct' : '✗ Incorrect'}</span>
+        </div>
+        <p class="study-q-text">${q.q}</p>
+        <div class="options" style="pointer-events:none;">
+          ${q.o.map((opt, oi) => `
+            <div class="option ${oi === correct ? 'reveal-correct' : ''} ${oi === userAns && !isCorrect ? 'incorrect' : ''}">
+              <div class="option-letter">${letters[oi]}</div>
+              <div class="option-text">${opt} ${oi === correct ? '<strong style="color:var(--green)"> ← Correct</strong>' : ''} ${oi === userAns && !isCorrect ? '<strong style="color:var(--red)"> ← Your answer</strong>' : ''}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="explanation show" style="margin-top:16px;">
+          <div class="explanation-title">Explanation</div>
+          <div class="explanation-text">${q.e}</div>
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('review-content').innerHTML = html;
+  showPage('review');
+}
+
+// ===================== STUDY =====================
+function renderStudy() {
+  const domain = state.studyDomain;
+  const questions = domain === -1 ? ALL_QUESTIONS : ALL_QUESTIONS.filter(q => q.d === domain);
+  const letters = ['A','B','C','D','E'];
+
+  // Update sidebar active
+  document.querySelectorAll('.study-domain-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.domain) === domain);
+  });
+
+  let html = `<div style="margin-bottom:16px;color:var(--text-muted);font-size:14px;">${questions.length} questions</div>`;
+  questions.forEach((q, i) => {
+    html += `
+      <div class="study-q-card" id="sq-${i}">
+        <div class="study-q-num">Q${ALL_QUESTIONS.indexOf(q)+1} · ${DOMAINS[q.d].name}</div>
+        <p class="study-q-text">${q.q}</p>
+        <div class="options" id="opts-${i}" style="pointer-events:none;">
+          ${q.o.map((opt, oi) => `
+            <div class="option" data-oi="${oi}">
+              <div class="option-letter">${letters[oi]}</div>
+              <div class="option-text">${opt}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-ghost" style="font-size:13px;" onclick="revealAnswer(${i},${q.a},'${q.e.replace(/'/g,"\\'")}')">Show Answer</button>
+        </div>
+        <div class="explanation" id="exp-${i}">
+          <div class="explanation-title">Explanation</div>
+          <div class="explanation-text">${q.e}</div>
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('study-content').innerHTML = html;
+  document.getElementById('study-count-all').textContent = ALL_QUESTIONS.length;
+  DOMAINS.forEach((_, di) => {
+    const el = document.getElementById('study-count-' + di);
+    if (el) el.textContent = ALL_QUESTIONS.filter(q => q.d === di).length;
+  });
+
+  // Store question refs for reveal
+  window._studyQs = questions;
+}
+
+function revealAnswer(idx, correct, exp) {
+  const opts = document.querySelectorAll(`#opts-${idx} .option`);
+  opts.forEach((opt, oi) => {
+    if (oi === correct) opt.classList.add('reveal-correct');
+  });
+  const expEl = document.getElementById('exp-' + idx);
+  expEl.classList.add('show');
+  const btn = expEl.previousElementSibling.querySelector('button');
+  if (btn) btn.style.display = 'none';
+}
+
+function filterStudy(domain, el) {
+  state.studyDomain = domain;
+  renderStudy();
+}
+
+// ===================== MODALS =====================
+function confirmExit() { document.getElementById('exit-modal').classList.add('show'); }
+function closeModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+}
+function forceExit() {
+  closeModal();
+  clearInterval(state.timerInterval);
+  showPage('home');
+}
+
+// ===================== INIT =====================
+updateHomeStats();
+</script>
+</body>
+</html>
