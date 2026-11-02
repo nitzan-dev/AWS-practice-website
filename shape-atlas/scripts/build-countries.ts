@@ -2,14 +2,14 @@
 // Run with: npm run build:data
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { geoArea, geoAzimuthalEqualArea, geoCentroid, geoStream } from 'd3-geo'
+import { geoArea, geoAzimuthalEqualArea, geoCentroid, geoGraticule10, geoNaturalEarth1, geoPath, geoStream } from 'd3-geo'
 import { merge } from 'topojson-client'
 import type { Feature, MultiPolygon, Polygon } from 'geojson'
 import type { GeometryCollection, Topology } from 'topojson-specification'
 import { CODE_REMAP, CUSTOM_GEOMETRY, EXTRA_COUNTRIES, KEEP_PARTS, MERGE_INTO, NAMED_GEOMETRIES } from './overrides.ts'
 import { TIER_1, TIER_2, TIER_3 } from './tiers.ts'
 import { EXTRA_ALIASES, NAME_OVERRIDES } from '../src/data/aliases.ts'
-import type { Continent, Country, Tier } from '../src/data/types.ts'
+import type { Continent, Country, MapCountry, Tier, WorldMapData } from '../src/data/types.ts'
 
 const require = createRequire(import.meta.url)
 const topo = JSON.parse(
@@ -98,7 +98,7 @@ function simplifyRing(ring: Pt[], tol: number): Pt[] {
 }
 
 /** Projects a feature and collects the output rings (after clipping/resampling). */
-function projectRings(f: Feature, projection: ReturnType<typeof geoAzimuthalEqualArea>): Pt[][] {
+function projectRings(f: Feature, projection: { stream: ReturnType<typeof geoAzimuthalEqualArea>['stream'] }): Pt[][] {
   const rings: Pt[][] = []
   let cur: Pt[] | null = null
   const sink = {
@@ -217,6 +217,9 @@ const tierOf = (id: string): Tier =>
 
 const countries: Country[] = []
 let totalPoints = 0
+// for the world map: complete geometry (every overseas part is clickable) and the mainland used for zooming
+const mapSources: { id: string; full: Feature<Polygon | MultiPolygon>; main: Feature<Polygon | MultiPolygon> }[] = []
+const usedGeoms = new Set<unknown>()
 
 for (const id of playable) {
   const m = metaById.get(id)!
@@ -233,7 +236,10 @@ for (const id of playable) {
     geometry = { type: 'Polygon', coordinates: CUSTOM_GEOMETRY[id] }
   }
   let f: Feature<Polygon | MultiPolygon> = rewind({ type: 'Feature', properties: {}, geometry })
+  const full = f
   f = filterParts(f, KEEP_PARTS[id])
+  mapSources.push({ id, full, main: f })
+  for (const g of parts) usedGeoms.add(g)
 
   const [clon, clat] = geoCentroid(f)
   const projection = geoAzimuthalEqualArea()
@@ -312,6 +318,60 @@ countries.sort((a, b) => a.name.localeCompare(b.name))
 const json = JSON.stringify(countries)
 writeFileSync(new URL('../src/data/countries.json', import.meta.url), json)
 
+// ---------- world map ----------
+
+const MAP_WIDTH = 2000
+const MAP_TOLERANCE = 0.35
+const DOT_AREA = 30 // px²: countries smaller than this get a clickable dot
+
+const mapProjection = geoNaturalEarth1().fitWidth(MAP_WIDTH, { type: 'Sphere' })
+const mapPath = geoPath(mapProjection).digits(1)
+const top = mapProjection([0, 84])![1]
+const bottom = mapProjection([0, -58])![1] // Antarctica is not playable, so crop it out
+
+function mapRings(f: Feature): Pt[][] {
+  const raw = projectRings(f, mapProjection)
+  const rings = raw.map((r) => simplifyRing(r, MAP_TOLERANCE)).filter((r) => r.length >= 3)
+  // microstates collapse at world scale: keep their raw outline for when the map is zoomed right in
+  if (!rings.length) return raw
+  const largest = Math.max(...rings.map((r) => Math.abs(ringArea(r))))
+  return rings.filter((r) => Math.abs(ringArea(r)) >= Math.min(0.4, largest))
+}
+
+const byIdForMap = new Map(countries.map((c) => [c.id, c]))
+const mapCountries: MapCountry[] = mapSources.map(({ id, full, main }) => {
+  const c = byIdForMap.get(id)!
+  const [cx, cy] = mapProjection(c.centroid)!
+  // only rings near the centroid count for the zoom box, so Fiji or Russia don't span the whole map
+  const near = projectRings(main, mapProjection).filter((r) => Math.abs(ringCentroid(r)[0] - cx) < 600)
+  const pts = near.flat()
+  const mainArea = Math.abs(near.reduce((s, r) => s + ringArea(r), 0))
+  const r1 = (n: number) => Math.round(n * 10) / 10
+  return {
+    id,
+    d: ringsToPath(mapRings(full), 1),
+    c: [r1(cx), r1(cy)],
+    b: pts.length
+      ? [r1(Math.min(...pts.map((p) => p[0]))), r1(Math.min(...pts.map((p) => p[1]))), r1(Math.max(...pts.map((p) => p[0]))), r1(Math.max(...pts.map((p) => p[1])))]
+      : [r1(cx - 2), r1(cy - 2), r1(cx + 2), r1(cy + 2)],
+    ...(mainArea < DOT_AREA ? { dot: true } : {}),
+  }
+})
+
+const otherGeoms = geoms.filter((g) => !usedGeoms.has(g) && g.properties!.name !== 'Antarctica')
+const otherLand = rewind({ type: 'Feature', properties: {}, geometry: merge(topo as any, otherGeoms as any) })
+
+const worldMap: WorldMapData = {
+  viewBox: [0, Math.round(top), MAP_WIDTH, Math.round(bottom - top)],
+  sphere: mapPath({ type: 'Sphere' }) ?? '',
+  graticule: mapPath(geoGraticule10()) ?? '',
+  other: ringsToPath(mapRings(otherLand), 1),
+  countries: mapCountries,
+}
+const mapJson = JSON.stringify(worldMap)
+writeFileSync(new URL('../src/data/worldmap.json', import.meta.url), mapJson)
+
 const tiers = [1, 2, 3, 4].map((t) => countries.filter((c) => c.tier === t).length)
 console.log(`countries: ${countries.length}  tiers: ${tiers.join('/')}  points: ${totalPoints}  size: ${(json.length / 1024).toFixed(0)} KB`)
+console.log(`world map: ${(mapJson.length / 1024).toFixed(0)} KB, dots: ${mapCountries.filter((c) => c.dot).length}`)
 console.log('dispersed:', countries.filter((c) => c.islands).map((c) => c.id).join(' '))

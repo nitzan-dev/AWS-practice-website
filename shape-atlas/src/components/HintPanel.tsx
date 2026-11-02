@@ -1,14 +1,15 @@
-import { Globe2, Landmark, Lightbulb, Map as MapIcon, Type } from 'lucide-react'
+import { Globe2, Landmark, Lightbulb, Map as MapIcon, Shapes, Type } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import type { Country } from '../data/types'
-import { HINT_LABEL, SPECS, hintKindsFor, type Difficulty, type HintKind } from '../game/config'
+import { HINT_LABEL, SPECS, hintKindsFor, type AnswerMode, type Difficulty, type HintKind } from '../game/config'
 
 const ICONS: Record<HintKind, ReactNode> = {
   continent: <Globe2 size={16} />,
   letters: <Type size={16} />,
   neighbors: <MapIcon size={16} />,
   capital: <Landmark size={16} />,
+  shape: <Shapes size={16} />,
 }
 
 const letterMask = (name: string) =>
@@ -17,7 +18,7 @@ const letterMask = (name: string) =>
     .map((ch, i) => (i === 0 ? ch.toUpperCase() : /\p{L}/u.test(ch) ? '_' : ch === ' ' ? ' ' : ch))
     .join(' ')
 
-function hintText(kind: HintKind, c: Country): ReactNode {
+function hintText(kind: HintKind, c: Country, mode: AnswerMode): ReactNode {
   switch (kind) {
     case 'continent':
       return c.continent
@@ -26,21 +27,24 @@ function hintText(kind: HintKind, c: Country): ReactNode {
     case 'neighbors':
       return c.borders.length === 0
         ? 'No land borders. Surrounded by sea'
-        : `Shares a border with ${c.borders.length} ${c.borders.length === 1 ? 'country' : 'countries'} (outlined)`
+        : `Shares a border with ${c.borders.length} ${c.borders.length === 1 ? 'country' : 'countries'} (${mode === 'map' ? 'highlighted' : 'outlined'})`
     case 'capital':
       return c.capital || 'No official capital'
+    case 'shape':
+      return 'Silhouette shown on the map'
   }
 }
 
 interface Props {
   country: Country
   difficulty: Difficulty
+  answerMode?: AnswerMode
   used: HintKind[]
   disabled: boolean
   onUse: (kind: HintKind) => void
 }
 
-export function HintPanel({ country, difficulty, used, disabled, onUse }: Props) {
+export function HintPanel({ country, difficulty, answerMode = 'choices', used, disabled, onUse }: Props) {
   const spec = SPECS[difficulty]
   const left = spec.hints - used.length
   const shown: HintKind[] = spec.showContinent ? ['continent', ...used] : used
@@ -58,7 +62,7 @@ export function HintPanel({ country, difficulty, used, disabled, onUse }: Props)
             >
               <span className="text-primary-hi">{ICONS[k]}</span>
               <span className="font-bold text-muted">{HINT_LABEL[k]}</span>
-              <span className="ml-auto text-right font-semibold text-ink">{hintText(k, country)}</span>
+              <span className="ml-auto text-right font-semibold text-ink">{hintText(k, country, answerMode)}</span>
             </motion.li>
           ))}
         </AnimatePresence>
@@ -71,7 +75,7 @@ export function HintPanel({ country, difficulty, used, disabled, onUse }: Props)
             {left} {left === 1 ? 'hint' : 'hints'}
             {spec.hintCost > 0 && <span className="font-semibold">· −{spec.hintCost} pts each</span>}
           </span>
-          {hintKindsFor(difficulty)
+          {hintKindsFor(difficulty, answerMode)
             .filter((k) => !used.includes(k))
             .map((k) => (
               <button

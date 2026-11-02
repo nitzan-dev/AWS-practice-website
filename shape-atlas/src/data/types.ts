@@ -43,3 +43,25 @@ export interface Country {
   kmPerUnit: number
   descriptors: ShapeDescriptors
 }
+
+/** A country on the interactive world map (Natural Earth projection, pre-projected). */
+export interface MapCountry {
+  id: string
+  /** SVG path of every part of the country, including overseas territories. */
+  d: string
+  /** Projected centroid. */
+  c: [number, number]
+  /** Bounding box of the mainland, for zooming: [x0, y0, x1, y1]. */
+  b: [number, number, number, number]
+  /** Too small to click reliably: drawn with a dot. */
+  dot?: boolean
+}
+
+export interface WorldMapData {
+  viewBox: [number, number, number, number]
+  sphere: string
+  graticule: string
+  /** Land that isn't one of the 197 (Greenland, Western Sahara, territories). */
+  other: string
+  countries: MapCountry[]
+}

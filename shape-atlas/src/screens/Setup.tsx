@@ -1,10 +1,10 @@
-import { ArrowLeft, Check, Clock, Keyboard, LayoutGrid, Lightbulb, Play, Trophy } from 'lucide-react'
+import { ArrowLeft, Check, Clock, Keyboard, LayoutGrid, Lightbulb, MapPinned, Play, Trophy } from 'lucide-react'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { ClayButton, IconButton } from '../components/ClayButton'
 import { ShapeStage } from '../components/ShapeStage'
 import { useAtlas } from '../data/atlas'
-import { CLASSIC_LENGTH, DAILY_LENGTH, DIFFICULTIES, SPECS, type AnswerMode, type Difficulty, type GameMode } from '../game/config'
+import { CLASSIC_LENGTH, DAILY_LENGTH, DIFFICULTIES, SPECS, timerFor, type AnswerMode, type Difficulty, type GameMode } from '../game/config'
 import { dailyKey } from '../game/daily'
 import { poolFor } from '../game/questions'
 import { useRecords } from '../store/records'
@@ -107,7 +107,7 @@ export function Setup({ mode, onBack, onStart, onShowDaily }: Props) {
                   <ul className="mt-3 space-y-1 text-xs font-bold text-faint sm:text-sm">
                     <li>{poolFor(d, countries).length} countries</li>
                     <li className="flex items-center gap-1.5">
-                      <Clock size={14} /> {spec.timer ? `${spec.timer}s per shape` : 'No timer'}
+                      <Clock size={14} /> {timerFor(d, answerMode) ? `${timerFor(d, answerMode)}s per ${answerMode === 'map' ? 'country' : 'shape'}` : 'No timer'}
                     </li>
                     <li className="flex items-center gap-1.5">
                       <Lightbulb size={14} /> {spec.hints} {spec.hints === 1 ? 'hint' : 'hints'}
@@ -139,6 +139,13 @@ export function Setup({ mode, onBack, onStart, onShowDaily }: Props) {
             icon={<Keyboard size={24} />}
             title="Typing"
             sub="Type the name yourself"
+          />
+          <Segment
+            active={answerMode === 'map'}
+            onClick={() => set({ answerMode: 'map' })}
+            icon={<MapPinned size={24} />}
+            title="Find on map"
+            sub="See the name, tap the country"
           />
         </div>
       </section>

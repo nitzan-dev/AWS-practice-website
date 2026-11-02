@@ -9,13 +9,15 @@ interface Props {
   correct: boolean
   answer: Country | null
   timedOut: boolean
+  /** How far the wrong pick was from the answer (map mode). */
+  distanceKm?: number
   points: number
   streak: number
   isLast: boolean
   onNext: () => void
 }
 
-export function FactCard({ country, correct, answer, timedOut, points, streak, isLast, onNext }: Props) {
+export function FactCard({ country, correct, answer, timedOut, distanceKm, points, streak, isLast, onNext }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -55,6 +57,7 @@ export function FactCard({ country, correct, answer, timedOut, points, streak, i
           {!correct && answer && (
             <p className="mt-1 text-sm font-semibold text-muted">
               You answered <span className="text-danger">{answer.name}</span>
+              {distanceKm !== undefined && <>, {Math.round(distanceKm).toLocaleString('en-US')} km away</>}
             </p>
           )}
         </div>

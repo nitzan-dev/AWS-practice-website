@@ -2,9 +2,9 @@ import type { Tier } from '../data/types'
 
 export const DIFFICULTIES = ['easy', 'medium', 'hard', 'veryhard'] as const
 export type Difficulty = (typeof DIFFICULTIES)[number]
-export type AnswerMode = 'choices' | 'typing'
+export type AnswerMode = 'choices' | 'typing' | 'map'
 export type GameMode = 'classic' | 'survival' | 'daily'
-export type HintKind = 'continent' | 'letters' | 'neighbors' | 'capital'
+export type HintKind = 'continent' | 'letters' | 'neighbors' | 'capital' | 'shape'
 
 export interface DifficultySpec {
   label: string
@@ -30,7 +30,7 @@ export interface DifficultySpec {
 export const SPECS: Record<Difficulty, DifficultySpec> = {
   easy: {
     label: 'Easy',
-    tagline: 'Famous shapes, no clock',
+    tagline: 'Famous countries, no clock',
     tiers: [1],
     tierWeight: { 1: 1, 2: 0, 3: 0, 4: 0 },
     timer: null,
@@ -46,7 +46,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
   },
   medium: {
     label: 'Medium',
-    tagline: 'Well-known countries, 30s',
+    tagline: 'Well-known countries',
     tiers: [1, 2],
     tierWeight: { 1: 1, 2: 1.4, 3: 0, 4: 0 },
     timer: 30,
@@ -62,7 +62,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
   },
   hard: {
     label: 'Hard',
-    tagline: 'Look-alikes, 20s',
+    tagline: 'Look-alikes and lesser-known',
     tiers: [1, 2, 3],
     tierWeight: { 1: 0.6, 2: 1, 3: 1.6, 4: 0 },
     timer: 20,
@@ -78,7 +78,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
   },
   veryhard: {
     label: 'Very Hard',
-    tagline: 'All 197, outline only, 12s',
+    tagline: 'All 197. Outlines only, borders hidden on the map',
     tiers: [1, 2, 3, 4],
     tierWeight: { 1: 0.4, 2: 0.8, 3: 2, 4: 3 },
     timer: 12,
@@ -94,19 +94,36 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
   },
 }
 
-export const answerModeLabel = (m: AnswerMode) => (m === 'choices' ? '4 choices' : 'Typing')
+export const ANSWER_MODE_LABEL: Record<AnswerMode, string> = { choices: '4 choices', typing: 'Typing', map: 'Find on map' }
+export const answerModeLabel = (m: AnswerMode) => ANSWER_MODE_LABEL[m]
+
+/** Finding a country on the map takes longer than recognising a shape, so it gets extra time. */
+export const MAP_EXTRA_SECONDS = 10
+
+export const timerFor = (d: Difficulty, mode: AnswerMode): number | null => {
+  const t = SPECS[d].timer
+  return t === null ? null : mode === 'map' ? t + MAP_EXTRA_SECONDS : t
+}
+
+/** In map mode the flag is shown next to the name on the easier levels. */
+export const showFlagFor = (d: Difficulty) => d === 'easy' || d === 'medium'
 
 export const HINT_ORDER: HintKind[] = ['continent', 'letters', 'neighbors', 'capital']
+/** In map mode the name is already shown, so the letters hint becomes a peek at the shape. */
+export const MAP_HINT_ORDER: HintKind[] = ['continent', 'shape', 'neighbors', 'capital']
 
-/** Hint kinds offered at a difficulty (continent is free and always shown on Easy). */
-export const hintKindsFor = (d: Difficulty): HintKind[] =>
-  SPECS[d].showContinent ? HINT_ORDER.filter((k) => k !== 'continent') : HINT_ORDER
+/** Hint kinds offered (continent is free and always shown on Easy). */
+export const hintKindsFor = (d: Difficulty, mode: AnswerMode = 'choices'): HintKind[] => {
+  const order = mode === 'map' ? MAP_HINT_ORDER : HINT_ORDER
+  return SPECS[d].showContinent ? order.filter((k) => k !== 'continent') : order
+}
 
 export const HINT_LABEL: Record<HintKind, string> = {
   continent: 'Continent',
   letters: 'Letters',
   neighbors: 'Neighbours',
   capital: 'Capital',
+  shape: 'Shape',
 }
 
 export const CLASSIC_LENGTH = 15

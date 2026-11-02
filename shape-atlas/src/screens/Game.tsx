@@ -7,6 +7,7 @@ import { ChoiceGrid } from '../components/ChoiceGrid'
 import { ClayButton, IconButton } from '../components/ClayButton'
 import { FactCard } from '../components/FactCard'
 import { HintPanel } from '../components/HintPanel'
+import { MapRound } from '../components/MapRound'
 import { Modal } from '../components/Modal'
 import { RevealGlobe } from '../components/RevealGlobe'
 import { ShapeStage } from '../components/ShapeStage'
@@ -14,7 +15,8 @@ import { TimerRing } from '../components/TimerRing'
 import { TypeAnswer } from '../components/TypeAnswer'
 import { useAtlas } from '../data/atlas'
 import { loadWorld, worldKey, type WorldFeature } from '../data/world'
-import { SPECS, SURVIVAL_LIVES, hintKindsFor } from '../game/config'
+import { geoDistance } from 'd3-geo'
+import { SPECS, SURVIVAL_LIVES, hintKindsFor, timerFor, type HintKind } from '../game/config'
 import { buildIndex } from '../game/matcher'
 import { createGameReducer, currentQuestion, initGame, type GameConfig, type GameState } from '../game/reducer'
 import { useSettings } from '../store/settings'
@@ -42,27 +44,38 @@ export function Game({ config, onExit, onFinish }: Props) {
   const q = currentQuestion(state)
   const country = byId.get(q.countryId)!
   const spec = SPECS[q.difficulty]
-  const timerMs = spec.timer ? spec.timer * 1000 : 0
+  const timerSeconds = timerFor(q.difficulty, config.answerMode)
+  const timerMs = timerSeconds ? timerSeconds * 1000 : 0
+  const isMap = config.answerMode === 'map'
   const revealed = state.phase !== 'question'
   const last = state.history.at(-1)
   const record = revealed ? last : undefined
 
+  // map mode: a country is selected first, then confirmed
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedId(null)
+  }, [state.index])
+
   // ---- timer ----
-  const [remaining, setRemaining] = useState(timerMs)
+  // Tied to the question index so a new question starts with a full clock in the same render
+  // (otherwise the timeout check below would still see the previous question's 0).
+  const [clock, setClock] = useState({ index: state.index, left: timerMs })
+  const remaining = clock.index === state.index ? clock.left : timerMs
   const lastSecond = useRef(Infinity)
   useEffect(() => {
-    setRemaining(timerMs)
     lastSecond.current = Infinity
-  }, [state.index, timerMs])
+  }, [state.index])
 
   useEffect(() => {
     if (state.phase !== 'question' || !timerMs || paused) return
     let prev = performance.now()
+    const index = state.index
     const id = window.setInterval(() => {
       const now = performance.now()
       const dt = now - prev
       prev = now
-      setRemaining((r) => Math.max(0, r - dt))
+      setClock((c) => ({ index, left: Math.max(0, (c.index === index ? c.left : timerMs) - dt) }))
     }, 100)
     return () => window.clearInterval(id)
   }, [state.phase, state.index, timerMs, paused])
@@ -110,8 +123,11 @@ export function Game({ config, onExit, onFinish }: Props) {
       if (e.key === 'Enter' && state.phase === 'reveal') {
         e.preventDefault()
         next()
+      } else if (e.key === 'Enter' && isMap && selectedId && state.phase === 'question') {
+        e.preventDefault()
+        answer(selectedId)
       } else if ((e.key === 'h' || e.key === 'H') && state.phase === 'question') {
-        const kind = hintKindsFor(q.difficulty).find((k) => !state.hints.includes(k))
+        const kind = hintKindsFor(q.difficulty, config.answerMode).find((k) => !state.hints.includes(k))
         if (kind && state.hints.length < spec.hints) {
           sfx.hint()
           dispatch({ type: 'hint', kind })
@@ -120,7 +136,7 @@ export function Game({ config, onExit, onFinish }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [paused, state.phase, state.hints, q.difficulty, spec.hints, next])
+  }, [paused, state.phase, state.hints, q.difficulty, spec.hints, next, isMap, selectedId, answer, config.answerMode])
 
   const neighbors = useMemo(() => {
     if (!world || !state.hints.includes('neighbors')) return undefined
@@ -132,8 +148,30 @@ export function Game({ config, onExit, onFinish }: Props) {
   const isLast =
     config.mode === 'survival' ? state.lives === 0 : state.index + 1 >= state.questions.length
 
+  const useHint = useCallback((kind: HintKind) => {
+    sfx.hint()
+    dispatch({ type: 'hint', kind })
+  }, [])
+
+  const picked = record?.answerId ? byId.get(record.answerId)! : null
+  const factCard = record && (
+    <FactCard
+      key={state.index}
+      country={country}
+      correct={record.correct}
+      answer={picked}
+      timedOut={!record.answerId && !!timerMs && remaining <= 0}
+      distanceKm={isMap && picked && !record.correct ? geoDistance(picked.centroid, country.centroid) * 6371 : undefined}
+      points={record.points}
+      streak={state.streak}
+      isLast={isLast}
+      onNext={next}
+    />
+  )
+  const modeLabel = config.mode === 'daily' ? `Daily · ${spec.label}` : config.mode === 'survival' ? 'Survival' : 'Classic'
+
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pb-8 pt-4 sm:px-6">
+    <div className={`mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-4 sm:px-6 ${isMap ? 'max-w-7xl' : 'max-w-6xl'}`}>
       {/* HUD */}
       <header className="relative z-[var(--z-hud)] flex items-center gap-3">
         <IconButton label="Pause" onClick={() => setPaused(true)}>
@@ -203,95 +241,101 @@ export function Game({ config, onExit, onFinish }: Props) {
         </div>
       </header>
 
-      <main className="mt-3 grid flex-1 items-center gap-4 sm:mt-5 sm:gap-6 lg:mt-2 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
-        {/* Stage */}
-        <section className="relative mx-auto aspect-square w-full max-w-[min(560px,42vh)] sm:max-w-[min(560px,52vh)] lg:max-w-[min(600px,72vh)]">
-          <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgb(99_102_241/0.22),transparent_70%)]" />
-          <AnimatePresence>
-            {revealed && (
-              <motion.div
-                key="globe"
-                className="absolute inset-0"
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
-                transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <RevealGlobe country={country} world={world} status={status} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <motion.div
-            layout
-            transition={{ type: 'spring', stiffness: 140, damping: 20, delay: revealed ? 0.25 : 0 }}
-            className={
-              revealed
-                ? 'clay-panel absolute left-0 top-0 z-10 size-[30%] p-3'
-                : 'absolute inset-0'
+      {isMap ? (
+        <MapRound
+          questionKey={state.index}
+          country={country}
+          difficulty={q.difficulty}
+          modeLabel={modeLabel}
+          hints={state.hints}
+          onHint={useHint}
+          revealed={revealed}
+          pickedId={record?.answerId ?? null}
+          selectedId={selectedId}
+          onSelect={(id) => {
+            if (id === selectedId) answer(id)
+            else {
+              sfx.click()
+              setSelectedId(id)
             }
-          >
-            <ShapeStage
-              key={state.index}
-              country={country}
-              outline={spec.outline && !revealed}
-              rotation={revealed ? 0 : q.rotation}
-              status={status}
-              neighbors={revealed ? undefined : neighbors}
-              showScale={spec.showScale && !revealed}
-              plain={revealed}
-            />
-          </motion.div>
-        </section>
-
-        {/* Panel */}
-        <section className="clay-panel relative w-full p-5 sm:p-7">
-          {state.phase === 'question' ? (
-            <div key={`q${state.index}`} className="flex flex-col gap-5">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">
-                  {config.mode === 'daily' ? `Daily · ${spec.label}` : config.mode === 'survival' ? 'Survival' : 'Classic'}
-                </p>
-                <h1 className="mt-1 font-display text-2xl font-semibold sm:text-4xl">Which country is this?</h1>
-              </div>
-              {config.answerMode === 'choices' ? (
-                <ChoiceGrid
-                  options={q.options.map((id) => byId.get(id)!)}
-                  revealed={false}
-                  correctId={q.countryId}
-                  pickedId={null}
-                  onPick={answer}
-                />
-              ) : (
-                <TypeAnswer key={state.index} index={index} byId={byId} spec={spec} disabled={false} onSubmit={answer} />
+          }}
+          onConfirm={() => selectedId && answer(selectedId)}
+          factCard={factCard}
+        />
+      ) : (
+        <main className="mt-3 grid flex-1 items-center gap-4 sm:mt-5 sm:gap-6 lg:mt-2 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
+          {/* Stage */}
+          <section className="relative mx-auto aspect-square w-full max-w-[min(560px,42vh)] sm:max-w-[min(560px,52vh)] lg:max-w-[min(600px,72vh)]">
+            <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgb(99_102_241/0.22),transparent_70%)]" />
+            <AnimatePresence>
+              {revealed && (
+                <motion.div
+                  key="globe"
+                  className="absolute inset-0"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <RevealGlobe country={country} world={world} status={status} />
+                </motion.div>
               )}
-              <HintPanel
-                country={country}
-                difficulty={q.difficulty}
-                used={state.hints}
-                disabled={false}
-                onUse={(kind) => {
-                  sfx.hint()
-                  dispatch({ type: 'hint', kind })
-                }}
-              />
-            </div>
-          ) : (
-            record && (
-              <FactCard
+            </AnimatePresence>
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 140, damping: 20, delay: revealed ? 0.25 : 0 }}
+              className={
+                revealed
+                  ? 'clay-panel absolute left-0 top-0 z-10 size-[30%] p-3'
+                  : 'absolute inset-0'
+              }
+            >
+              <ShapeStage
                 key={state.index}
                 country={country}
-                correct={record.correct}
-                answer={record.answerId ? byId.get(record.answerId)! : null}
-                timedOut={!record.answerId && !!timerMs && remaining <= 0}
-                points={record.points}
-                streak={state.streak}
-                isLast={isLast}
-                onNext={next}
+                outline={spec.outline && !revealed}
+                rotation={revealed ? 0 : q.rotation}
+                status={status}
+                neighbors={revealed ? undefined : neighbors}
+                showScale={spec.showScale && !revealed}
+                plain={revealed}
               />
-            )
-          )}
-        </section>
-      </main>
+            </motion.div>
+          </section>
+
+          {/* Panel */}
+          <section className="clay-panel relative w-full p-5 sm:p-7">
+            {state.phase === 'question' ? (
+              <div key={`q${state.index}`} className="flex flex-col gap-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">{modeLabel}</p>
+                  <h1 className="mt-1 font-display text-2xl font-semibold sm:text-4xl">Which country is this?</h1>
+                </div>
+                {config.answerMode === 'choices' ? (
+                  <ChoiceGrid
+                    options={q.options.map((id) => byId.get(id)!)}
+                    revealed={false}
+                    correctId={q.countryId}
+                    pickedId={null}
+                    onPick={answer}
+                  />
+                ) : (
+                  <TypeAnswer key={state.index} index={index} byId={byId} spec={spec} disabled={false} onSubmit={answer} />
+                )}
+                <HintPanel
+                  country={country}
+                  difficulty={q.difficulty}
+                  used={state.hints}
+                  disabled={false}
+                  onUse={useHint}
+                />
+              </div>
+            ) : (
+              factCard
+            )}
+          </section>
+        </main>
+      )}
 
       <div className="sr-only" aria-live="assertive">
         {record ? `${record.correct ? 'Correct' : 'Wrong'}. It's ${country.name}. ${record.points} points.` : ''}

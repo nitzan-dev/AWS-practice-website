@@ -1,16 +1,14 @@
 import { CalendarDays, ChevronRight, Flame, HeartPulse, Settings, Target, Trophy, Volume2, VolumeX } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
+import { motion } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { IconButton } from '../components/ClayButton'
 import { SettingsDialog } from '../components/SettingsDialog'
-import { ShapeStage } from '../components/ShapeStage'
+import { SpinningGlobe } from '../components/SpinningGlobe'
 import { useAtlas } from '../data/atlas'
 import { DAILY_LENGTH, type GameMode } from '../game/config'
 import { dailyKey, msUntilNextDaily } from '../game/daily'
 import { useRecords } from '../store/records'
 import { useSettings } from '../store/settings'
-
-const LOGO_SHAPES = ['ITA', 'JPN', 'BRA', 'AUS', 'GBR', 'IND', 'CHL', 'EGY', 'MEX', 'NOR']
 
 function useCountdown() {
   const [ms, setMs] = useState(msUntilNextDaily())
@@ -20,23 +18,6 @@ function useCountdown() {
   }, [])
   const s = Math.floor(ms / 1000)
   return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map((n) => String(n).padStart(2, '0')).join(':')
-}
-
-function LogoShape() {
-  const { byId } = useAtlas()
-  const reduce = useReducedMotion()
-  const [i, setI] = useState(0)
-  useEffect(() => {
-    if (reduce) return
-    const id = window.setInterval(() => setI((n) => (n + 1) % LOGO_SHAPES.length), 2600)
-    return () => window.clearInterval(id)
-  }, [reduce])
-  return (
-    <div className="relative mx-auto size-44 sm:size-56">
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgb(129_140_248/0.3),transparent_68%)]" />
-      <ShapeStage key={LOGO_SHAPES[i]} country={byId.get(LOGO_SHAPES[i])!} />
-    </div>
-  )
 }
 
 interface CardProps {
@@ -93,7 +74,10 @@ export function Home({ onPick }: { onPick: (mode: GameMode) => void }) {
       </header>
 
       <section className="mt-2 text-center sm:mt-0">
-        <LogoShape />
+        <div className="relative mx-auto size-60 sm:size-72">
+          <div className="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgb(99_102_241/0.28),transparent_65%)]" />
+          <SpinningGlobe className="relative w-full" />
+        </div>
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +86,7 @@ export function Home({ onPick }: { onPick: (mode: GameMode) => void }) {
           Shape Atlas
         </motion.h1>
         <p className="mx-auto mt-3 max-w-md text-lg text-muted">
-          Name the country from its silhouette. All {countries.length} of them, from easy to very hard.
+          Name the country from its silhouette, or find it on the map. All {countries.length} of them, from easy to very hard.
         </p>
       </section>
 
