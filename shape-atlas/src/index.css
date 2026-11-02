@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+/* Night Atlas design tokens */
+@theme {
+  --color-deep: #070b1f;
+  --color-surface: #111836;
+  --color-raised: #1a2350;
+  --color-raised-hi: #232e66;
+  --color-line: #2b3670;
+  --color-primary: #6366f1;
+  --color-primary-hi: #818cf8;
+  --color-accent: #f97316;
+  --color-accent-hi: #fb923c;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warn: #fbbf24;
+  --color-ink: #eef2ff;
+  --color-muted: #a5b4fc;
+  --color-faint: #7c86c4;
+
+  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-clay: 20px;
+
+  --animate-shake: shake 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  --animate-twinkle: twinkle 4s ease-in-out infinite;
+
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-8px); }
+    40%, 60% { transform: translateX(8px); }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.9; }
+  }
+}
+
+:root {
+  color-scheme: dark;
+  --shape-a: #22d3ee;
+  --shape-b: #818cf8;
+  --shape-c: #c084fc;
+  /* z-index scale */
+  --z-hud: 10;
+  --z-dropdown: 20;
+  --z-modal: 30;
+  --z-toast: 50;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-deep);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Clay surfaces: soft layered shadows with an inner highlight */
+@utility clay {
+  border-radius: var(--radius-clay);
+  background: linear-gradient(160deg, var(--color-raised-hi), var(--color-raised));
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.08),
+    inset 0 -3px 0 rgb(0 0 0 / 0.25),
+    0 10px 24px -8px rgb(0 0 0 / 0.55);
+}
+
+@utility clay-panel {
+  border-radius: 28px;
+  background: linear-gradient(170deg, rgb(26 35 80 / 0.85), rgb(17 24 54 / 0.9));
+  border: 1px solid rgb(129 140 248 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 24px 60px -20px rgb(0 0 0 / 0.7);
+  backdrop-filter: blur(12px);
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
