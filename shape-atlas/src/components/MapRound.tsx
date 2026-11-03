@@ -1,103 +1,69 @@
-import { Check, MousePointerClick } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAtlas } from '../data/atlas'
 import type { Country, WorldMapData } from '../data/types'
 import { loadWorldMap } from '../data/worldmap'
-import { SPECS, showFlagFor, type Difficulty, type HintKind } from '../game/config'
-import { ClayButton } from './ClayButton'
-import { Flag } from './Flag'
-import { HintPanel } from './HintPanel'
+import { SPECS, type Difficulty, type HintKind } from '../game/config'
 import { ShapeStage } from './ShapeStage'
 import { WorldMap } from './WorldMap'
 
+/** How much surrounding map to show around the highlighted country when naming it. */
+const NAME_CONTEXT: Record<Difficulty, number> = { easy: 2.5, medium: 3, hard: 4.5, veryhard: 6 }
+
 interface Props {
+  /** find: the name is given, pick the country. name: the country is lit up, type its name. */
+  variant: 'find' | 'name'
   questionKey: number
   country: Country
   difficulty: Difficulty
-  modeLabel: string
   hints: HintKind[]
-  onHint: (kind: HintKind) => void
   revealed: boolean
   pickedId: string | null
-  selectedId: string | null
-  onSelect: (id: string) => void
-  onConfirm: () => void
+  selectedId?: string | null
+  onSelect?: (id: string) => void
+  /** Contents of the panel above the map (title, answer controls, hints). */
+  prompt: ReactNode
   factCard: ReactNode
 }
 
-/** "Find on map" round: the name is given, the player picks the country on a world map. */
+/** A round played on the world map. */
 export function MapRound({
+  variant,
   questionKey,
   country,
   difficulty,
-  modeLabel,
   hints,
-  onHint,
   revealed,
   pickedId,
   selectedId,
   onSelect,
-  onConfirm,
+  prompt,
   factCard,
 }: Props) {
   const { countries } = useAtlas()
   const [data, setData] = useState<WorldMapData | null>(null)
   const spec = SPECS[difficulty]
+  const find = variant === 'find'
 
   useEffect(() => {
     loadWorldMap().then(setData)
   }, [])
 
+  // map-based hints only apply when finding: when naming, the map already shows where it is
   const focusIds = useMemo(
     () =>
-      hints.includes('continent')
+      find && hints.includes('continent')
         ? countries.filter((c) => c.continent === country.continent && c.tier <= 3).map((c) => c.id)
         : undefined,
-    [hints, countries, country],
+    [find, hints, countries, country],
   )
-  const highlightIds = hints.includes('neighbors') ? country.borders : undefined
+  const highlightIds = find && hints.includes('neighbors') ? country.borders : undefined
 
   return (
     <main className="mt-4 flex flex-1 flex-col gap-4">
-      {/* prompt */}
-      <section className="clay-panel flex flex-col gap-4 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            {showFlagFor(difficulty) && (
-              <Flag iso2={country.iso2} className="w-14 shrink-0 rounded-md ring-1 ring-white/15 sm:w-16" />
-            )}
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">{modeLabel} · Find this country</p>
-              <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">{country.name}</h1>
-            </div>
-          </div>
-          {!revealed && (
-            <ClayButton
-              variant="accent"
-              size="lg"
-              disabled={!selectedId}
-              onClick={onConfirm}
-              icon={selectedId ? <Check size={22} strokeWidth={3} /> : <MousePointerClick size={22} />}
-              className="w-full sm:w-auto"
-            >
-              {selectedId ? 'Confirm' : 'Pick on the map'}
-            </ClayButton>
-          )}
-        </div>
-        {!revealed && (
-          <HintPanel
-            country={country}
-            difficulty={difficulty}
-            answerMode="map"
-            used={hints}
-            disabled={false}
-            onUse={onHint}
-          />
-        )}
-      </section>
+      {/* raised above the map so the autocomplete list can overlap it */}
+      <section className="clay-panel relative z-[var(--z-dropdown)] flex flex-col gap-4 p-4 sm:p-5">{prompt}</section>
 
-      {/* map + result */}
       <div className="relative flex flex-1 flex-col gap-4">
         <section className="clay-panel relative h-[46vh] min-h-[300px] overflow-hidden p-0 sm:h-[58vh] lg:h-auto lg:min-h-[480px] lg:flex-1">
           {data ? (
@@ -105,7 +71,9 @@ export function MapRound({
               data={data}
               questionKey={questionKey}
               selectedId={selectedId}
-              onSelect={onSelect}
+              onSelect={find ? onSelect : undefined}
+              markId={find ? undefined : country.id}
+              context={NAME_CONTEXT[difficulty]}
               revealed={revealed}
               targetId={country.id}
               pickedId={pickedId}
@@ -121,7 +89,7 @@ export function MapRound({
           )}
 
           <AnimatePresence>
-            {hints.includes('shape') && !revealed && (
+            {find && hints.includes('shape') && !revealed && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}

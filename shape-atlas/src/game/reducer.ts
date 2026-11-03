@@ -109,7 +109,6 @@ export function createGameReducer(countries: Country[]) {
           correct,
           timeLeft: action.timeLeft,
           streak: state.streak,
-          hintsUsed: state.hints.length,
         })
         const streak = correct ? state.streak + 1 : 0
         return {

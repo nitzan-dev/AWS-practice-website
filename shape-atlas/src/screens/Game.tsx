@@ -1,4 +1,4 @@
-import { Flame, Heart, Pause, Volume2, VolumeX } from 'lucide-react'
+import { Check, Flame, Heart, MousePointerClick, Pause, Volume2, VolumeX } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { sfx } from '../audio/sfx'
@@ -6,6 +6,7 @@ import { AnimatedNumber } from '../components/AnimatedNumber'
 import { ChoiceGrid } from '../components/ChoiceGrid'
 import { ClayButton, IconButton } from '../components/ClayButton'
 import { FactCard } from '../components/FactCard'
+import { Flag } from '../components/Flag'
 import { HintPanel } from '../components/HintPanel'
 import { MapRound } from '../components/MapRound'
 import { Modal } from '../components/Modal'
@@ -16,7 +17,7 @@ import { TypeAnswer } from '../components/TypeAnswer'
 import { useAtlas } from '../data/atlas'
 import { loadWorld, worldKey, type WorldFeature } from '../data/world'
 import { geoDistance } from 'd3-geo'
-import { SPECS, SURVIVAL_LIVES, hintKindsFor, timerFor, type HintKind } from '../game/config'
+import { SPECS, SURVIVAL_LIVES, hintKindsFor, showFlagFor, timerFor, type HintKind } from '../game/config'
 import { buildIndex } from '../game/matcher'
 import { createGameReducer, currentQuestion, initGame, type GameConfig, type GameState } from '../game/reducer'
 import { useSettings } from '../store/settings'
@@ -46,7 +47,9 @@ export function Game({ config, onExit, onFinish }: Props) {
   const spec = SPECS[q.difficulty]
   const timerSeconds = timerFor(q.difficulty, config.answerMode)
   const timerMs = timerSeconds ? timerSeconds * 1000 : 0
+  // 'map': find the named country. 'typing': name the country lit up on the map. 'choices': silhouette.
   const isMap = config.answerMode === 'map'
+  const onMap = config.answerMode !== 'choices'
   const revealed = state.phase !== 'question'
   const last = state.history.at(-1)
   const record = revealed ? last : undefined
@@ -161,7 +164,7 @@ export function Game({ config, onExit, onFinish }: Props) {
       correct={record.correct}
       answer={picked}
       timedOut={!record.answerId && !!timerMs && remaining <= 0}
-      distanceKm={isMap && picked && !record.correct ? geoDistance(picked.centroid, country.centroid) * 6371 : undefined}
+      distanceKm={onMap && picked && !record.correct ? geoDistance(picked.centroid, country.centroid) * 6371 : undefined}
       points={record.points}
       streak={state.streak}
       isLast={isLast}
@@ -171,7 +174,7 @@ export function Game({ config, onExit, onFinish }: Props) {
   const modeLabel = config.mode === 'daily' ? `Daily · ${spec.label}` : config.mode === 'survival' ? 'Survival' : 'Classic'
 
   return (
-    <div className={`mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-4 sm:px-6 ${isMap ? 'max-w-7xl' : 'max-w-6xl'}`}>
+    <div className={`mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-4 sm:px-6 ${onMap ? 'max-w-7xl' : 'max-w-6xl'}`}>
       {/* HUD */}
       <header className="relative z-[var(--z-hud)] flex items-center gap-3">
         <IconButton label="Pause" onClick={() => setPaused(true)}>
@@ -241,14 +244,13 @@ export function Game({ config, onExit, onFinish }: Props) {
         </div>
       </header>
 
-      {isMap ? (
+      {onMap ? (
         <MapRound
+          variant={isMap ? 'find' : 'name'}
           questionKey={state.index}
           country={country}
           difficulty={q.difficulty}
-          modeLabel={modeLabel}
           hints={state.hints}
-          onHint={useHint}
           revealed={revealed}
           pickedId={record?.answerId ?? null}
           selectedId={selectedId}
@@ -259,8 +261,58 @@ export function Game({ config, onExit, onFinish }: Props) {
               setSelectedId(id)
             }
           }}
-          onConfirm={() => selectedId && answer(selectedId)}
           factCard={factCard}
+          prompt={
+            isMap ? (
+              <>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    {showFlagFor(q.difficulty) && (
+                      <Flag iso2={country.iso2} className="w-14 shrink-0 rounded-md ring-1 ring-white/15 sm:w-16" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">{modeLabel} · Find this country</p>
+                      <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">{country.name}</h1>
+                    </div>
+                  </div>
+                  {!revealed && (
+                    <ClayButton
+                      variant="accent"
+                      size="lg"
+                      disabled={!selectedId}
+                      onClick={() => selectedId && answer(selectedId)}
+                      icon={selectedId ? <Check size={22} strokeWidth={3} /> : <MousePointerClick size={22} />}
+                      className="w-full sm:w-auto"
+                    >
+                      {selectedId ? 'Confirm' : 'Pick on the map'}
+                    </ClayButton>
+                  )}
+                </div>
+                {!revealed && (
+                  <HintPanel country={country} difficulty={q.difficulty} answerMode="map" used={state.hints} disabled={false} onUse={useHint} />
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                  <div className="min-w-0 lg:w-80 lg:shrink-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">{modeLabel} · Name it</p>
+                    <h1 className="font-display text-2xl font-bold leading-tight sm:text-3xl">
+                      {revealed ? country.name : 'Which country is highlighted?'}
+                    </h1>
+                  </div>
+                  {!revealed && (
+                    <div className="min-w-0 flex-1">
+                      <TypeAnswer key={state.index} index={index} byId={byId} spec={spec} disabled={false} onSubmit={answer} />
+                    </div>
+                  )}
+                </div>
+                {!revealed && (
+                  <HintPanel country={country} difficulty={q.difficulty} answerMode="typing" used={state.hints} disabled={false} onUse={useHint} />
+                )}
+              </>
+            )
+          }
         />
       ) : (
         <main className="mt-3 grid flex-1 items-center gap-4 sm:mt-5 sm:gap-6 lg:mt-2 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
@@ -311,17 +363,13 @@ export function Game({ config, onExit, onFinish }: Props) {
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">{modeLabel}</p>
                   <h1 className="mt-1 font-display text-2xl font-semibold sm:text-4xl">Which country is this?</h1>
                 </div>
-                {config.answerMode === 'choices' ? (
-                  <ChoiceGrid
-                    options={q.options.map((id) => byId.get(id)!)}
-                    revealed={false}
-                    correctId={q.countryId}
-                    pickedId={null}
-                    onPick={answer}
-                  />
-                ) : (
-                  <TypeAnswer key={state.index} index={index} byId={byId} spec={spec} disabled={false} onSubmit={answer} />
-                )}
+                <ChoiceGrid
+                  options={q.options.map((id) => byId.get(id)!)}
+                  revealed={false}
+                  correctId={q.countryId}
+                  pickedId={null}
+                  onPick={answer}
+                />
                 <HintPanel
                   country={country}
                   difficulty={q.difficulty}

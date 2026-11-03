@@ -21,9 +21,8 @@ export interface DifficultySpec {
   /** Characters typed before suggestions appear; null = no autocomplete. */
   autocompleteAfter: number | null
   typoTolerance: number
-  /** Hints usable per shape. */
+  /** Free hints per question (only Easy has any). */
   hints: number
-  hintCost: number
   basePoints: number
 }
 
@@ -41,7 +40,6 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
     autocompleteAfter: 1,
     typoTolerance: 2,
     hints: 3,
-    hintCost: 0,
     basePoints: 100,
   },
   medium: {
@@ -56,8 +54,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
     showScale: true,
     autocompleteAfter: 2,
     typoTolerance: 2,
-    hints: 3,
-    hintCost: 30,
+    hints: 0,
     basePoints: 150,
   },
   hard: {
@@ -72,8 +69,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
     showScale: true,
     autocompleteAfter: 3,
     typoTolerance: 1,
-    hints: 2,
-    hintCost: 50,
+    hints: 0,
     basePoints: 225,
   },
   veryhard: {
@@ -88,8 +84,7 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
     showScale: false,
     autocompleteAfter: null,
     typoTolerance: 1,
-    hints: 1,
-    hintCost: 120,
+    hints: 0,
     basePoints: 350,
   },
 }
@@ -97,12 +92,12 @@ export const SPECS: Record<Difficulty, DifficultySpec> = {
 export const ANSWER_MODE_LABEL: Record<AnswerMode, string> = { choices: '4 choices', typing: 'Typing', map: 'Find on map' }
 export const answerModeLabel = (m: AnswerMode) => ANSWER_MODE_LABEL[m]
 
-/** Finding a country on the map takes longer than recognising a shape, so it gets extra time. */
-export const MAP_EXTRA_SECONDS = 10
+/** Map rounds take longer than recognising a shape (finding: searching the map; typing: reading it, then typing). */
+export const EXTRA_SECONDS: Record<AnswerMode, number> = { choices: 0, typing: 5, map: 10 }
 
 export const timerFor = (d: Difficulty, mode: AnswerMode): number | null => {
   const t = SPECS[d].timer
-  return t === null ? null : mode === 'map' ? t + MAP_EXTRA_SECONDS : t
+  return t === null ? null : t + EXTRA_SECONDS[mode]
 }
 
 /** In map mode the flag is shown next to the name on the easier levels. */

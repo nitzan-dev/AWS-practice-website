@@ -64,6 +64,7 @@ export const useRecords = create<RecordsState>()(
       },
       reset: () => set({ best: {}, daily: {}, dailyStreak: { last: null, count: 0 }, gamesPlayed: 0 }),
     }),
+    // storage key keeps the original project name so existing records survive the rename
     { name: 'shape-atlas:records', storage: safeStorage },
   ),
 )

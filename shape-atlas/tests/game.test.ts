@@ -20,14 +20,11 @@ function answerAll(state: GameState, correct: (i: number) => boolean) {
 
 describe('scoring', () => {
   it('rewards speed, streaks and difficulty', () => {
-    expect(questionPoints({ difficulty: 'easy', correct: true, timeLeft: null, streak: 0, hintsUsed: 0 })).toBe(100)
-    expect(questionPoints({ difficulty: 'hard', correct: true, timeLeft: 1, streak: 0, hintsUsed: 0 })).toBe(338)
-    expect(questionPoints({ difficulty: 'medium', correct: true, timeLeft: 0, streak: 5, hintsUsed: 1 })).toBe(195)
-    expect(questionPoints({ difficulty: 'hard', correct: false, timeLeft: 1, streak: 9, hintsUsed: 0 })).toBe(0)
+    expect(questionPoints({ difficulty: 'easy', correct: true, timeLeft: null, streak: 0 })).toBe(100)
+    expect(questionPoints({ difficulty: 'hard', correct: true, timeLeft: 1, streak: 0 })).toBe(338)
+    expect(questionPoints({ difficulty: 'medium', correct: true, timeLeft: 0, streak: 5 })).toBe(225)
+    expect(questionPoints({ difficulty: 'hard', correct: false, timeLeft: 1, streak: 9 })).toBe(0)
     expect(streakMultiplier(50)).toBe(2)
-  })
-  it('never drops a correct answer below 10', () => {
-    expect(questionPoints({ difficulty: 'veryhard', correct: true, timeLeft: 0, streak: 0, hintsUsed: 3 })).toBe(10)
   })
 })
 
@@ -60,13 +57,18 @@ describe('game reducer', () => {
     expect(survivalDifficulty('hard', 50)).toBe('veryhard')
   })
 
-  it('limits hints per difficulty and ignores duplicates', () => {
-    let s = initGame({ mode: 'classic', difficulty: 'hard', answerMode: 'typing', seed: 'h' }, countries)
-    s = reducer(s, { type: 'hint', kind: 'continent' })
-    s = reducer(s, { type: 'hint', kind: 'continent' })
-    s = reducer(s, { type: 'hint', kind: 'letters' })
-    s = reducer(s, { type: 'hint', kind: 'capital' })
-    expect(s.hints).toEqual(['continent', 'letters'])
+  it('gives 3 hints on Easy, ignoring duplicates', () => {
+    let s = initGame({ mode: 'classic', difficulty: 'easy', answerMode: 'typing', seed: 'h' }, countries)
+    for (const kind of ['letters', 'letters', 'neighbors', 'capital', 'continent'] as const) s = reducer(s, { type: 'hint', kind })
+    expect(s.hints).toEqual(['letters', 'neighbors', 'capital'])
+  })
+
+  it('gives no hints above Easy', () => {
+    for (const difficulty of ['medium', 'hard', 'veryhard'] as const) {
+      let s = initGame({ mode: 'classic', difficulty, answerMode: 'choices', seed: 'h' }, countries)
+      s = reducer(s, { type: 'hint', kind: 'capital' })
+      expect(s.hints).toEqual([])
+    }
   })
 
   it('ignores answers outside the question phase', () => {
@@ -82,7 +84,7 @@ describe('daily helpers', () => {
     expect(dailyKey(new Date('2026-11-03T23:59:00Z'))).toBe('2026-11-03')
     expect(previousKey('2026-03-01')).toBe('2026-02-28')
     expect(shareText('2026-11-03', [{ correct: true }, { correct: false }], 1234)).toBe(
-      'Shape Atlas Daily 2026-11-03\n🟩🟥\n1/2 · 1,234 pts',
+      'Atlas Challenge Daily 2026-11-03\n🟩🟥\n1/2 · 1,234 pts',
     )
   })
 })

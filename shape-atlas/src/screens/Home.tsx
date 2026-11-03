@@ -81,9 +81,9 @@ export function Home({ onPick }: { onPick: (mode: GameMode) => void }) {
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 bg-gradient-to-r from-[#67e8f9] via-[#a5b4fc] to-[#d8b4fe] bg-clip-text font-display text-5xl font-bold tracking-tight text-transparent sm:text-7xl"
+          className="mt-4 bg-gradient-to-r from-[#67e8f9] via-[#a5b4fc] to-[#d8b4fe] bg-clip-text font-display text-[2.6rem] leading-tight font-bold tracking-tight text-transparent sm:text-7xl"
         >
-          Shape Atlas
+          Atlas Challenge
         </motion.h1>
         <p className="mx-auto mt-3 max-w-md text-lg text-muted">
           Name the country from its silhouette, or find it on the map. All {countries.length} of them, from easy to very hard.

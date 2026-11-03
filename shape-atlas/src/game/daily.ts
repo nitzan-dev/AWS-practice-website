@@ -21,5 +21,5 @@ export function previousKey(key: string): string {
 export function shareText(key: string, history: Pick<RoundRecord, 'correct'>[], score: number): string {
   const grid = history.map((h) => (h.correct ? '🟩' : '🟥')).join('')
   const right = history.filter((h) => h.correct).length
-  return `Shape Atlas Daily ${key}\n${grid}\n${right}/${history.length} · ${score.toLocaleString('en-US')} pts`
+  return `Atlas Challenge Daily ${key}\n${grid}\n${right}/${history.length} · ${score.toLocaleString('en-US')} pts`
 }

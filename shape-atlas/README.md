@@ -1,4 +1,4 @@
-# Shape Atlas
+# Atlas Challenge
 
 Guess the country from its silhouette, or find a named country on the world map. All 197 countries (193 UN members + Vatican City, Palestine, Kosovo, Taiwan), four difficulty levels, and three ways to play.
 
@@ -20,15 +20,15 @@ npm run build      # static site in dist/
 | Timer | none | 30 s | 20 s | 12 s |
 | 4-choice decoys | other continents | same continent | same-region look-alikes | closest look-alikes anywhere |
 | Typing help | autocomplete after 1 letter | after 2 | after 3 | none |
-| Hints | 3 free | 3 × −30 | 2 × −50 | 1 × −120 |
+| Hints | 3 free | none | none | none |
 
-**Ways to answer:** pick from 4 choices, type the name, or **Find on map**: you get the country's name (plus flag on Easy/Medium) and tap it on a pannable, zoomable world map. Map mode gets 10 extra seconds, offers a shape hint instead of letters, and hides borders on Very Hard. Tiny countries have dots so they're tappable.
+**Ways to answer:** **4 choices** (name the silhouette), **Typing** (a country is lit up on the world map; type its name, with neighbour names as a hint), or **Find on map**: you get the country's name (plus flag on Easy/Medium) and tap it on a pannable, zoomable world map. Map mode gets 10 extra seconds, offers a shape hint instead of letters, and hides borders on Very Hard. Tiny countries have dots so they're tappable.
 
 **Modes:** Classic (15 shapes), Survival (3 lives, harder every 10 correct), Daily (10 shapes, same for everyone, one attempt, shareable result).
 
-**Scoring:** base × speed bonus (up to ×1.5) × streak multiplier (up to ×2) − hint costs.
+**Scoring:** base × speed bonus (up to ×1.5) × streak multiplier (up to ×2).
 
-**Keys:** `1`–`4` pick a choice · `Enter` submit / confirm map pick / next · `H` hint · `Esc` pause.
+**Keys:** `1`–`4` pick a choice · `Enter` submit / confirm map pick / next · `H` hint (Easy) · `Esc` pause.
 
 ## Project layout
 

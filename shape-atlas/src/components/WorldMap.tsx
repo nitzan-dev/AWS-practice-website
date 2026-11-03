@@ -12,8 +12,13 @@ interface Props {
   data: WorldMapData
   /** Changes every question; resets the view. */
   questionKey: number
-  selectedId: string | null
-  onSelect: (id: string) => void
+  selectedId?: string | null
+  /** Omit to make the map view-only (no picking). */
+  onSelect?: (id: string) => void
+  /** Country lit up during the question (typing mode: "name this country"). */
+  markId?: string
+  /** With markId: how much surrounding area to show, as a multiple of the country's size. */
+  context?: number
   revealed: boolean
   targetId: string
   pickedId: string | null
@@ -26,6 +31,15 @@ interface Props {
 
 const MAX_ZOOM = 40
 
+/** A box around `b` that is `factor` times its size (at least `min` units across). */
+function grow(b: Box, factor: number, min: number): Box {
+  const cx = (b[0] + b[2]) / 2
+  const cy = (b[1] + b[3]) / 2
+  const hw = Math.max((b[2] - b[0]) * factor, min) / 2
+  const hh = Math.max((b[3] - b[1]) * factor, min / 2) / 2
+  return [cx - hw, cy - hh, cx + hw, cy + hh]
+}
+
 function union(boxes: Box[]): Box {
   return [
     Math.min(...boxes.map((b) => b[0])),
@@ -35,12 +49,13 @@ function union(boxes: Box[]): Box {
   ]
 }
 
-type Paint = 'idle' | 'selected' | 'highlight' | 'correct' | 'wrong' | 'dim'
+type Paint = 'idle' | 'selected' | 'mark' | 'highlight' | 'correct' | 'wrong' | 'dim'
 
 const FILL: Record<Paint, string> = {
   idle: '#33418f',
   highlight: '#4f5fc4',
   selected: '#f97316',
+  mark: '#f97316',
   correct: '#34d399',
   wrong: '#f87171',
   dim: '#26306d',
@@ -65,7 +80,7 @@ const CountryPaths = memo(function CountryPaths({ countries, paint, hideBorders,
             d={c.d}
             data-id={c.id}
             fill={FILL[p]}
-            stroke={hideBorders && p !== 'selected' ? FILL[p] : '#0b1033'}
+            stroke={hideBorders && p !== 'selected' && p !== 'mark' ? FILL[p] : '#0b1033'}
             strokeWidth={hideBorders ? 0.8 : 0.7}
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
@@ -80,8 +95,10 @@ const CountryPaths = memo(function CountryPaths({ countries, paint, hideBorders,
 export function WorldMap({
   data,
   questionKey,
-  selectedId,
+  selectedId = null,
   onSelect,
+  markId,
+  context = 3,
   revealed,
   targetId,
   pickedId,
@@ -96,6 +113,7 @@ export function WorldMap({
   const reduce = useReducedMotion()
   const [vx, vy, vw, vh] = data.viewBox
   const byId = useMemo(() => new Map(data.countries.map((c) => [c.id, c])), [data])
+  const selectable = !!onSelect && !revealed
 
   // The part of the map actually on screen, in map units. Wide boxes show the whole world;
   // narrow (phone) boxes fill their height and show a slice you can pan across.
@@ -164,10 +182,15 @@ export function WorldMap({
     if (zoomRef.current) select(svgRef.current!).transition().duration(reduce ? 0 : 600).call(zoomRef.current.transform, zoomIdentity)
   }, [reduce])
 
-  // new question: back to the whole world
+  // new question: back to the whole world, or (typing mode) to the marked country and its surroundings.
+  // Re-runs when the visible area is first measured, so phones frame it correctly too.
   useEffect(() => {
-    resetView()
-  }, [questionKey, resetView])
+    if (revealed) return
+    const mark = markId ? byId.get(markId) : undefined
+    if (mark) zoomToBox(grow(mark.b, context, 90), MAX_ZOOM)
+    else resetView()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionKey, markId, vis])
 
   // continent hint: zoom to that region
   const focusKey = focusIds?.join(',')
@@ -197,15 +220,17 @@ export function WorldMap({
         if (id === pickedId) return 'wrong'
         return 'dim'
       }
+      if (id === markId) return 'mark'
       if (id === selectedId) return 'selected'
       if (highlight.has(id)) return 'highlight'
       return 'idle'
     },
-    [revealed, targetId, pickedId, selectedId, highlight],
+    [revealed, targetId, pickedId, selectedId, markId, highlight],
   )
 
   const dots = data.countries.filter((c) => c.dot)
   const target = byId.get(targetId)
+  const mark = markId && !revealed ? byId.get(markId) : undefined
 
   return (
     <div className="relative h-full w-full">
@@ -215,11 +240,15 @@ export function WorldMap({
         preserveAspectRatio={slice ? 'xMidYMid slice' : 'xMidYMid meet'}
         className="block h-full w-full cursor-grab touch-none select-none active:cursor-grabbing"
         role="application"
-        aria-label="World map. Drag to pan, scroll or pinch to zoom, click a country to select it."
+        aria-label={
+          selectable
+            ? 'World map. Drag to pan, scroll or pinch to zoom, click a country to select it.'
+            : 'World map with one country highlighted. Drag to pan, scroll or pinch to zoom.'
+        }
         onClick={(e) => {
-          if (revealed) return
+          if (!selectable) return
           const id = (e.target as Element).getAttribute('data-id')
-          if (id) onSelect(id)
+          if (id) onSelect!(id)
         }}
       >
         <defs>
@@ -232,7 +261,7 @@ export function WorldMap({
           <path d={data.sphere} fill="url(#map-ocean)" stroke="#2b3670" strokeWidth={1} vectorEffect="non-scaling-stroke" />
           <path d={data.graticule} fill="none" stroke="#818cf8" strokeOpacity={0.1} strokeWidth={0.6} vectorEffect="non-scaling-stroke" />
           <path d={data.other} fill="#1f2860" stroke="#0b1033" strokeWidth={0.5} vectorEffect="non-scaling-stroke" pointerEvents="none" />
-          <CountryPaths countries={data.countries} paint={paint} hideBorders={hideBorders} hoverable={!revealed && !hideBorders} />
+          <CountryPaths countries={data.countries} paint={paint} hideBorders={hideBorders} hoverable={selectable && !hideBorders} />
 
           {/* tiny countries: a visible dot plus a generous invisible hit area */}
           {dots.map((c) => {
@@ -248,10 +277,24 @@ export function WorldMap({
                   vectorEffect="non-scaling-stroke"
                   pointerEvents="none"
                 />
-                <circle r={11 / k} data-id={c.id} fill="transparent" className={revealed ? '' : 'cursor-pointer'} />
+                <circle r={11 / k} data-id={c.id} fill="transparent" className={selectable ? 'cursor-pointer' : ''} />
               </g>
             )
           })}
+
+          {/* typing mode: a pulsing ring so even a tiny marked country stands out */}
+          {mark && (
+            <g transform={`translate(${mark.c[0]} ${mark.c[1]})`} pointerEvents="none">
+              <circle r={18 / k} fill="none" stroke="#f97316" strokeWidth={2.5} vectorEffect="non-scaling-stroke">
+                {!reduce && (
+                  <>
+                    <animate attributeName="r" values={`${10 / k};${30 / k};${10 / k}`} dur="1.8s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.1;1" dur="1.8s" repeatCount="indefinite" />
+                  </>
+                )}
+              </circle>
+            </g>
+          )}
 
           {revealed && target && (
             <g transform={`translate(${target.c[0]} ${target.c[1]})`} pointerEvents="none">
@@ -272,7 +315,11 @@ export function WorldMap({
         {[
           { label: 'Zoom in', icon: <Plus size={18} />, run: () => zoomBy(1.8) },
           { label: 'Zoom out', icon: <Minus size={18} />, run: () => zoomBy(1 / 1.8) },
-          { label: 'Show whole world', icon: <Maximize2 size={16} />, run: resetView },
+          {
+            label: mark ? 'Back to the highlighted country' : 'Show whole world',
+            icon: <Maximize2 size={16} />,
+            run: () => (mark ? zoomToBox(grow(mark.b, context, 90), MAX_ZOOM) : resetView()),
+          },
         ].map((b) => (
           <button
             key={b.label}

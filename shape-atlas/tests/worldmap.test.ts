@@ -40,5 +40,6 @@ describe('map mode rules', () => {
     expect(timerFor('easy', 'map')).toBeNull()
     expect(timerFor('hard', 'map')).toBe(30)
     expect(timerFor('hard', 'choices')).toBe(20)
+    expect(timerFor('hard', 'typing')).toBe(25)
   })
 })

@@ -107,11 +107,10 @@ export function Setup({ mode, onBack, onStart, onShowDaily }: Props) {
                   <ul className="mt-3 space-y-1 text-xs font-bold text-faint sm:text-sm">
                     <li>{poolFor(d, countries).length} countries</li>
                     <li className="flex items-center gap-1.5">
-                      <Clock size={14} /> {timerFor(d, answerMode) ? `${timerFor(d, answerMode)}s per ${answerMode === 'map' ? 'country' : 'shape'}` : 'No timer'}
+                      <Clock size={14} /> {timerFor(d, answerMode) ? `${timerFor(d, answerMode)}s per ${answerMode === 'choices' ? 'shape' : 'country'}` : 'No timer'}
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <Lightbulb size={14} /> {spec.hints} {spec.hints === 1 ? 'hint' : 'hints'}
-                      {spec.hintCost ? ` · −${spec.hintCost}` : ' · free'}
+                      <Lightbulb size={14} /> {spec.hints ? `${spec.hints} free hints` : 'No hints'}
                     </li>
                   </ul>
                 </motion.button>
@@ -131,14 +130,14 @@ export function Setup({ mode, onBack, onStart, onShowDaily }: Props) {
             onClick={() => set({ answerMode: 'choices' })}
             icon={<LayoutGrid size={24} />}
             title="4 choices"
-            sub="Pick the right name"
+            sub="Name the silhouette"
           />
           <Segment
             active={answerMode === 'typing'}
             onClick={() => set({ answerMode: 'typing' })}
             icon={<Keyboard size={24} />}
             title="Typing"
-            sub="Type the name yourself"
+            sub="Name the country lit up on the map"
           />
           <Segment
             active={answerMode === 'map'}

@@ -20,6 +20,7 @@ export const useSettings = create<SettingsState>()(
       answerMode: 'choices',
       set: (patch) => set(patch),
     }),
+    // storage key keeps the original project name so existing settings survive the rename
     { name: 'shape-atlas:settings', storage: safeStorage },
   ),
 )
