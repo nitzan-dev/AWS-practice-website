@@ -5,8 +5,11 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const NIGHT = '#070B1F'
+// GitHub Pages serves the game from /<repo-name>/; the deploy workflow sets BASE_PATH. Locally it's /.
+const BASE = process.env.BASE_PATH ?? '/'
 
 export default defineConfig({
+  base: BASE,
   plugins: [
     react(),
     tailwindcss(),
@@ -23,8 +26,8 @@ export default defineConfig({
         background_color: NIGHT,
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
-        scope: '/',
+        start_url: BASE,
+        scope: BASE,
         categories: ['games', 'education'],
       },
       workbox: {
@@ -34,7 +37,8 @@ export default defineConfig({
         // flags (2.6 MB in total) are cached one by one as they're shown
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/assets/') && url.pathname.endsWith('.svg'),
+            // a RegExp, not a function: Workbox copies this into the service worker as text, so it can't use BASE at runtime
+            urlPattern: new RegExp(`${BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}assets/[^/]+\\.svg$`),
             handler: 'CacheFirst',
             options: { cacheName: 'flags', expiration: { maxEntries: 300 } },
           },

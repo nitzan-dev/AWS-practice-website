@@ -19,7 +19,7 @@ Atlas Challenge is an installable web app (PWA): once it's hosted on an HTTPS si
 
 It then opens full screen with its own icon and works offline: the game, both maps and the fonts are cached on first visit, and flags are cached as they're shown. Updates install automatically on the next launch.
 
-Any static host works (GitHub Pages, Netlify, Vercel): deploy the `dist/` folder from `npm run build`. Installing needs HTTPS, so a phone on your Wi-Fi opening `http://<your-computer>:5173` can play but not install. To try the offline build locally, run `npm run build && npm run preview`.
+**Live site:** https://nitzan-dev.github.io/AWS-practice-website/ is deployed by `.github/workflows/deploy-atlas-challenge.yml` (tests, then build, then GitHub Pages) on every push to `main` that touches `shape-atlas/`. The build reads `BASE_PATH` so it works from that sub-folder. Any other static host works too: deploy `dist/` from `npm run build`. Installing needs HTTPS, so a phone on your Wi-Fi opening `http://<your-computer>:5173` can play but not install. To try the offline build locally, run `npm run build && npm run preview`.
 
 The icons come from `public/app-icon.svg`; the plugin regenerates every size on each build (`pwa-assets.config.ts`).
 

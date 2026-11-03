@@ -39,7 +39,7 @@ export function InstallCard() {
       className="clay-panel relative mt-6 flex flex-col gap-4 p-5 pr-14 sm:flex-row sm:items-center"
       aria-label="Install the app"
     >
-      <img src="/app-icon.svg" alt="" width={56} height={56} className="size-14 shrink-0 rounded-2xl ring-1 ring-white/10" />
+      <img src={`${import.meta.env.BASE_URL}app-icon.svg`} alt="" width={56} height={56} className="size-14 shrink-0 rounded-2xl ring-1 ring-white/10" />
       <div className="flex-1">
         <p className="font-display text-xl font-semibold">Play it like an app</p>
         {deferred ? (
