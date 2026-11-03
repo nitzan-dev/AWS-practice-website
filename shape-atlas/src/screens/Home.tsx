@@ -2,6 +2,7 @@ import { CalendarDays, ChevronRight, Flame, HeartPulse, Settings, Target, Trophy
 import { motion } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { IconButton } from '../components/ClayButton'
+import { InstallCard } from '../components/InstallCard'
 import { SettingsDialog } from '../components/SettingsDialog'
 import { SpinningGlobe } from '../components/SpinningGlobe'
 import { useAtlas } from '../data/atlas'
@@ -63,7 +64,7 @@ export function Home({ onPick }: { onPick: (mode: GameMode) => void }) {
   const streakAlive = dailyStreak.count > 0 && (dailyStreak.last === dailyKey() || !today)
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4 pb-8 pt-4 sm:px-6">
+    <div className="mx-auto flex min-h-safe max-w-5xl flex-col px-4 pb-8 pt-4 sm:px-6">
       <header className="flex justify-end gap-2">
         <IconButton label={sound ? 'Mute sound' : 'Turn sound on'} onClick={() => set({ sound: !sound })}>
           {sound ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -151,6 +152,8 @@ export function Home({ onPick }: { onPick: (mode: GameMode) => void }) {
           delay={0.19}
         />
       </section>
+
+      <InstallCard />
 
       <footer className="mt-auto pt-10 text-center text-xs font-semibold text-faint">
         197 countries · 4 difficulties · Map data © Natural Earth

@@ -24,7 +24,7 @@ const isDebug = () => location.hash === '#debug' || new URLSearchParams(location
 
 function Loading() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4" role="status">
+    <div className="flex min-h-safe flex-col items-center justify-center gap-4" role="status">
       <div className="size-14 animate-spin rounded-full border-4 border-raised border-t-primary-hi" />
       <p className="font-display text-xl text-muted">Charting the world…</p>
     </div>

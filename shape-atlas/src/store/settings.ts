@@ -5,6 +5,8 @@ import { safeStorage } from './storage'
 
 interface SettingsState {
   sound: boolean
+  /** Short vibration on answers (phones that support it). */
+  haptics: boolean
   reduceMotion: boolean
   difficulty: Difficulty
   answerMode: AnswerMode
@@ -15,6 +17,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       sound: true,
+      haptics: true,
       reduceMotion: false,
       difficulty: 'easy',
       answerMode: 'choices',

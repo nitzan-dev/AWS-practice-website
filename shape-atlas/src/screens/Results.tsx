@@ -69,7 +69,7 @@ export function Results({ summary, onPlayAgain, onSetup, onHome }: Props) {
   ]
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-4xl flex-col px-4 pb-10 pt-8 sm:px-6">
+    <div className="mx-auto flex min-h-safe max-w-4xl flex-col px-4 pb-10 pt-8 sm:px-6">
       <section className="text-center">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-faint">
           {summary.mode === 'daily' ? `Daily · ${summary.dailyKey}` : `${summary.mode === 'survival' ? 'Survival' : 'Classic'} · ${summary.difficultyLabel}`}{' '}

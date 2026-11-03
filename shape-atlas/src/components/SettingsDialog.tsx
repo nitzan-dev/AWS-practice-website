@@ -21,7 +21,8 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint: strin
 }
 
 export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { sound, reduceMotion, set } = useSettings()
+  const { sound, haptics, reduceMotion, set } = useSettings()
+  const canVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator
   const reset = useRecords((s) => s.reset)
   const [confirm, setConfirm] = useState(false)
 
@@ -36,6 +37,9 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
     >
       <div className="flex flex-col gap-3">
         <Toggle label="Sound effects" hint="Chimes, ticks and fanfares" checked={sound} onChange={(v) => set({ sound: v })} />
+        {canVibrate && (
+          <Toggle label="Vibration" hint="A short buzz on each answer" checked={haptics} onChange={(v) => set({ haptics: v })} />
+        )}
         <Toggle
           label="Reduce motion"
           hint="Calmer transitions, no spinning globe"

@@ -1,7 +1,7 @@
 import { Check, Flame, Heart, MousePointerClick, Pause, Volume2, VolumeX } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { sfx } from '../audio/sfx'
+import { buzz, sfx } from '../audio/sfx'
 import { AnimatedNumber } from '../components/AnimatedNumber'
 import { ChoiceGrid } from '../components/ChoiceGrid'
 import { ClayButton, IconButton } from '../components/ClayButton'
@@ -101,9 +101,14 @@ export function Game({ config, onExit, onFinish }: Props) {
   // ---- sounds on each result ----
   useEffect(() => {
     if (!last) return
-    if (!last.correct) sfx.wrong()
-    else if (state.streak > 0 && state.streak % 5 === 0) sfx.streak()
-    else sfx.correct()
+    if (!last.correct) {
+      sfx.wrong()
+      buzz([60, 50, 60])
+    } else {
+      if (state.streak > 0 && state.streak % 5 === 0) sfx.streak()
+      else sfx.correct()
+      buzz(25)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.history.length])
 
@@ -174,7 +179,7 @@ export function Game({ config, onExit, onFinish }: Props) {
   const modeLabel = config.mode === 'daily' ? `Daily · ${spec.label}` : config.mode === 'survival' ? 'Survival' : 'Classic'
 
   return (
-    <div className={`mx-auto flex min-h-dvh w-full flex-col px-4 pb-8 pt-4 sm:px-6 ${onMap ? 'max-w-7xl' : 'max-w-6xl'}`}>
+    <div className={`mx-auto flex min-h-safe w-full flex-col px-4 pb-8 pt-4 sm:px-6 ${onMap ? 'max-w-7xl' : 'max-w-6xl'}`}>
       {/* HUD */}
       <header className="relative z-[var(--z-hud)] flex items-center gap-3">
         <IconButton label="Pause" onClick={() => setPaused(true)}>

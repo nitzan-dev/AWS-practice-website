@@ -30,6 +30,16 @@ function tone(freq: number, start: number, dur: number, type: OscillatorType = '
   osc.stop(t + dur + 0.05)
 }
 
+/** Vibration feedback on supported phones (Android; iOS Safari ignores it). */
+export function buzz(pattern: number | number[]) {
+  if (!useSettings.getState().haptics) return
+  try {
+    navigator.vibrate?.(pattern)
+  } catch {
+    /* not supported */
+  }
+}
+
 export const sfx = {
   correct() {
     tone(660, 0, 0.18, 'triangle')

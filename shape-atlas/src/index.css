@@ -56,6 +56,34 @@ body,
   min-height: 100%;
 }
 
+html,
+body {
+  /* phone: no rubber-band bounce or pull-to-refresh mid-game */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* installed app runs edge to edge: keep content clear of the notch and home bar */
+#root {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* full screen height minus the notch/home-bar padding above */
+@utility min-h-safe {
+  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* taps register instantly (no double-tap-to-zoom delay); game text isn't selectable by accident */
+button,
+[role='application'] {
+  touch-action: manipulation;
+}
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body {
   margin: 0;
   background: var(--color-deep);

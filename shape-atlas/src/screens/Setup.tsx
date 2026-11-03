@@ -60,7 +60,7 @@ export function Setup({ mode, onBack, onStart, onShowDaily }: Props) {
   const record = best[`${mode}:${difficulty}:${answerMode}`]
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4 pb-10 pt-4 sm:px-6">
+    <div className="mx-auto flex min-h-safe max-w-5xl flex-col px-4 pb-10 pt-4 sm:px-6">
       <header className="flex items-center gap-4">
         <IconButton label="Back to menu" onClick={onBack}>
           <ArrowLeft size={20} />
